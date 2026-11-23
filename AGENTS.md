@@ -8,11 +8,13 @@
 ## Alcance aprobado
 - El MVP es una herramienta local y personal para preparar torneos de Magic: The Gathering Standard.
 - El MVP usa SQLite como almacenamiento local relacional. Los archivos CSV o JSON guardados en `data/` son el formato de entrada y se incorporan automáticamente al almacenamiento al iniciar; el dashboard consulta los datos persistidos.
-- El modelo separa torneos y listas publicadas, con una relación de cartas por lista prevista para los datos completos disponibles. El total real de participantes se guarda una vez por torneo en SQLite, aunque se repita por fila en el CSV/JSON de entrada.
+- El modelo separa torneos, listas publicadas y cartas por lista. El total real de participantes se guarda una vez por torneo en SQLite, aunque se repita por fila en el CSV/JSON de entrada.
 - Cada lista publicada es una instancia independiente identificada por `(tournament_id, deck_id)`; jugador y arquetipo son atributos. No agrupes listas por arquetipo ni fusiones listas de un jugador entre torneos.
 - Reimportar un snapshot idéntico no cambia ni duplica registros. Una nueva versión completa válida reemplaza el snapshot anterior del torneo dentro de una transacción. Si una versión falla, conserva los datos anteriores. Si archivos distintos contienen snapshots contradictorios para el mismo torneo, informa el conflicto y no elijas uno automáticamente.
 - Conserva las etiquetas manuales aunque una lista desaparezca en la nueva versión; marca la etiqueta como huérfana para revisión, no la elimines en silencio.
-- La carga automática de archivos desde `data/` está implementada en el prototipo en memoria. La adaptación a SQLite está aprobada, pero pendiente; los archivos inválidos deben reportarse sin bloquear los válidos.
+- La carga automática desde `data/` y el almacenamiento SQLite local están implementados. Los archivos inválidos o en conflicto deben reportarse sin sobrescribir registros válidos.
+- Los CSV/JSON de metadatos se guardan en la raíz de `data/`; los CSV de cartas solo se cargan desde `data/examples/` y `data/cards/` cuando terminan en `_cards.csv`. No interpretes esos archivos como torneos.
+- La base se crea en `data/mtg_standard_analyst.sqlite3`, que está excluida de Git. El importador manual del panel guarda el archivo validado en `data/` para conservarlo y cargarlo en futuros inicios.
 - La carga y visualización iniciales están verificadas; eso no significa que todos los criterios del MVP estén implementados.
 - La consulta remota, la automatización, el acceso público y el rediseño visual están fuera del MVP. No amplíes el alcance sin una decisión del propietario.
 

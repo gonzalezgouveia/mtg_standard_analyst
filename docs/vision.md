@@ -65,6 +65,6 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 ## 7. Decisiones pendientes
 - Viabilidad de fuentes remotas futuras. MTGpile queda como candidata para evaluación posterior, no como fuente aprobada ni dependencia del MVP.
 - Criterios detallados para agrupar o dividir arquetipos manualmente, como evolución posterior al MVP.
-- Fuente y formato fiables para importar listas completas y cartas individuales; la tabla relacional se prevé, pero no se inventarán cartas ausentes.
+- Validar a futuro la estabilidad, cobertura y condiciones de uso de fuentes para ampliar la importación de listas completas; el esquema de cartas ya está implementado y no se inventarán cartas ausentes.
 - Arquitectura futura y estrategia de despliegue, si se decide publicar el producto.
 - Qué funcionalidades analíticas avanzadas entran en versiones posteriores.

@@ -125,7 +125,7 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Qué aprendimos:** Repetir `participants_total` en CSV/JSON es cómodo para un formato de importación por filas, pero en el modelo relacional el total debe almacenarse una vez por torneo. Las listas publicadas pertenecen a un torneo; las cartas pertenecen a una lista. Los archivos CSV/JSON pueden seguir facilitando la incorporación manual sin ser el almacenamiento operativo del dashboard.
 
-**Decisiones y motivos:** SQLite será el almacenamiento local persistente del MVP. El esquema separará torneos y listas, y preverá una relación de cartas por lista. El jugador se mantiene como atributo de la lista por ahora; no se crea entidad de jugador hasta que haya una necesidad concreta de seguimiento entre eventos. La tabla de cartas se poblará solo cuando existan listas completas y estructuradas; la muestra actual no las contiene. La carga de archivos desde `data/` debe incorporarlos a SQLite de manera idempotente y segura.
+**Decisiones y motivos:** SQLite será el almacenamiento local persistente del MVP. El esquema separará torneos y listas, con una relación de cartas por lista. El jugador se mantiene como atributo de la lista por ahora; no se crea entidad de jugador hasta que haya una necesidad concreta de seguimiento entre eventos. La carga de archivos desde `data/` debe incorporarlos a SQLite de manera idempotente y segura.
 
 **Política de identidad y actualización acordada:** Cada lista es una instancia del torneo y jugador, con clave `(tournament_id, deck_id)`; el arquetipo no es la identidad de la lista. El mismo arquetipo puede corresponder a listas con cartas distintas, y un jugador tendrá registros independientes en torneos distintos. Archivos idénticos no duplican datos. Una versión completa modificada y válida reemplaza la anterior en una transacción; si falla, se conservan los datos previos. Si hay snapshots contradictorios simultáneos del mismo torneo, la aplicación informa el conflicto y no escoge uno. Etiquetas manuales de listas que desaparezcan se conservan como huérfanas para revisión.
 
@@ -158,6 +158,19 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 **Papel de la IA:** La IA explicó que las páginas públicas estáticas parecen técnicamente accesibles, pero que la viabilidad de una extracción automatizada requiere validación adicional. El propietario decidió conservarla como opción futura y mantener acotada la muestra actual.
 
 **Resultado y siguiente paso:** Se añadió una tarea futura al backlog. Evaluar la fuente después, con una prueba controlada en varios torneos, antes de considerar una sincronización automatizada.
+
+### Entrada 011 — Persistencia SQLite del MVP (23/11/2026)
+**Estado:** Implementado; validación inicial completada.
+
+**Qué hicimos:** Creamos el almacenamiento local SQLite con las tablas `tournaments`, `decks`, `deck_cards` y registro de fuentes. Conectamos la sincronización al arranque de Streamlit: los CSV/JSON de metadatos de la raíz de `data/` se importan como snapshots de torneo y los archivos `_cards.csv` de `data/examples/` o `data/cards/` se importan por separado. El importador manual ahora guarda su archivo validado en `data/` para que permanezca disponible.
+
+**Qué aprendimos:** Separar los metadatos de torneo, listas y cartas evita repetir el total de participantes y conserva cada lista como una instancia de torneo y `deck_id`. Los snapshots idénticos quedan sin cambios; los modificados se escriben en transacciones; archivos contradictorios se reportan; un fallo de validación conserva lo previamente guardado.
+
+**Decisiones y motivos:** El archivo SQLite vive en `data/` y Git lo ignora junto con los CSV/JSON. Las etiquetas manuales siguen en `archetype_labels.json`, fuera de las tablas de torneo, y no se eliminan cuando una lista falta en una nueva versión. La muestra de cartas es un archivo complementario local y no se confunde con un CSV de torneo.
+
+**Papel de la IA:** La IA implementó esquema, validación/importación, persistencia y conexión de Streamlit; añadió verificaciones automatizadas para idempotencia, actualización, conflictos y preservación ante errores. El propietario había validado previamente la carga visual y aprobó las reglas de importación.
+
+**Resultado y siguiente paso:** Las 32 listas y 988 filas de cartas se cargaron en la base local; al sincronizar por segunda vez no hubo cambios ni duplicados. Las 15 pruebas automatizadas pasaron y la prueba de Streamlit terminó sin excepciones. Seguir con los filtros por fecha y tipo, métricas y cobertura.
 
 ## Plantilla de próximas entradas
 

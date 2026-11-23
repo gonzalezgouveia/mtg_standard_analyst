@@ -8,22 +8,24 @@ from src.data import (
     add_display_archetype,
     deck_key,
     load_label_overrides,
-    load_tournament_directory,
     load_tournament_file,
     save_label_overrides,
 )
+from src.database import query_card_counts, query_decks, sync_local_data
 
 ROOT = Path(__file__).parent
 LABELS_PATH = ROOT / "data" / "archetype_labels.json"
 DATA_PATH = ROOT / "data"
+DATABASE_PATH = DATA_PATH / "mtg_standard_analyst.sqlite3"
 
 st.set_page_config(page_title="MTG Standard Metagame", layout="wide")
 st.title("MTG Standard Metagame Analytics")
 st.caption("Análisis local de listas publicadas guardadas en la carpeta de datos.")
 
-if "tournaments" not in st.session_state:
-    st.session_state.tournaments, startup_errors = load_tournament_directory(DATA_PATH)
+if "database_initialized" not in st.session_state:
+    _, startup_errors = sync_local_data(DATA_PATH, DATABASE_PATH)
     st.session_state.startup_errors = startup_errors
+    st.session_state.database_initialized = True
 if st.session_state.get("startup_errors"):
     with st.expander("Archivos de datos que no se pudieron cargar"):
         for error in st.session_state.startup_errors:
@@ -36,27 +38,42 @@ if "label_overrides" not in st.session_state:
         st.error(str(exc))
 
 with st.sidebar:
-    st.caption("Al iniciar, se cargan los CSV/JSON de torneos guardados en la carpeta `data`. Para conservar un archivo importado, guárdalo allí.")
+    st.caption("Los torneos se guardan en SQLite local. Al iniciar, se sincronizan los archivos de `data`.")
     st.header("Importar torneo")
     uploaded = st.file_uploader("Archivo CSV o JSON", type=["csv", "json"])
     if uploaded is not None and st.button("Importar archivo", type="primary"):
         try:
             incoming = load_tournament_file(uploaded)
-            existing = st.session_state.tournaments
-            if existing:
-                import pandas as pd
-                merged = pd.concat([*existing, incoming], ignore_index=True)
-                # Revalidate combined imports to prevent duplicate deck records.
-                from src.data import validate_records
-                incoming_all = validate_records(merged.to_dict("records"))
-                st.session_state.tournaments = [incoming_all]
-            else:
-                st.session_state.tournaments = [incoming]
-            st.success(f"Importadas {len(incoming)} listas.")
+            if incoming["tournament_id"].nunique() != 1:
+                raise DataValidationError(
+                    "Desde el panel lateral importa un torneo por archivo. "
+                    "Para cargar varios, guarda sus archivos en data."
+                )
+            filename = Path(uploaded.name).name
+            if filename.lower() == "archetype_labels.json":
+                raise DataValidationError("Ese nombre está reservado para las etiquetas manuales.")
+            destination = DATA_PATH / filename
+            old_content = destination.read_bytes() if destination.exists() else None
+            destination.write_bytes(uploaded.getvalue())
+            _, errors = sync_local_data(DATA_PATH, DATABASE_PATH)
+            upload_errors = [error for error in errors if filename in error]
+            if upload_errors:
+                if old_content is None:
+                    destination.unlink(missing_ok=True)
+                else:
+                    destination.write_bytes(old_content)
+                sync_local_data(DATA_PATH, DATABASE_PATH)
+                raise DataValidationError(" ".join(upload_errors))
+            st.session_state.startup_errors = errors
+            st.success(f"Archivo guardado en data e importado. {len(incoming)} listas procesadas.")
+            st.rerun()
         except DataValidationError as exc:
             st.error(str(exc))
+        except OSError as exc:
+            st.error(f"No se pudo guardar o importar el archivo: {exc}")
 
-if not st.session_state.tournaments:
+data = query_decks(DATABASE_PATH)
+if data.empty:
     st.info(
         "No se encontraron torneos válidos en la carpeta `data`. Guarda allí un CSV o JSON "
         "con las listas publicadas, o impórtalo desde el panel lateral. No se consultan datos de MTGO automáticamente."
@@ -69,10 +86,16 @@ if not st.session_state.tournaments:
         )
     st.stop()
 
-import pandas as pd
-data = pd.concat(st.session_state.tournaments, ignore_index=True)
 overrides = st.session_state.label_overrides
 view = add_display_archetype(data, overrides)
+card_counts = query_card_counts(DATABASE_PATH)
+loaded_keys = {deck_key(row) for _, row in view.iterrows()}
+orphaned_labels = set(overrides) - loaded_keys
+if orphaned_labels:
+    st.info(
+        f"Se conservaron {len(orphaned_labels)} etiquetas manuales de listas que ya no están "
+        "en los datos actuales; revísalas si actualizaste un torneo."
+    )
 
 st.caption(
     f"Cobertura: {len(view)} mazos publicados importados en {view['tournament_id'].nunique()} torneo(s). "
@@ -83,6 +106,11 @@ c1.metric("Mazos importados", len(view))
 c2.metric("Jugadores identificados", view.loc[view.player != "", "player"].nunique())
 c3.metric("Posiciones disponibles", int((view.placement != "").sum()))
 c4.metric("Listas disponibles", int((view.decklist != "").sum()))
+if card_counts["rows"]:
+    st.caption(
+        f"Cartas registradas: {card_counts['rows']} filas de cartas en "
+        f"{card_counts['decks']} listas."
+    )
 
 col1, col2 = st.columns([1, 2])
 with col1:

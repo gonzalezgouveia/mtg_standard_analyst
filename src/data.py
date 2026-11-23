@@ -20,6 +20,16 @@ OPTIONAL_FIELDS = (
     "participants_total",
 )
 FIELDS = REQUIRED_FIELDS + OPTIONAL_FIELDS
+CARD_REQUIRED_FIELDS = ("tournament_id", "deck_id", "zone", "card_name", "quantity")
+CARD_OPTIONAL_FIELDS = (
+    "tournament_date",
+    "tournament_type",
+    "player",
+    "placement",
+    "archetype",
+    "source_url",
+)
+CARD_FIELDS = CARD_REQUIRED_FIELDS + CARD_OPTIONAL_FIELDS
 
 
 class DataValidationError(ValueError):
@@ -124,6 +134,75 @@ def load_tournament_directory(directory: str | Path) -> tuple[list[pd.DataFrame]
         except (DataValidationError, OSError) as exc:
             errors.append(f"{path.name}: {exc}")
     return frames, errors
+
+
+def load_card_file(file: Any, filename: str | None = None) -> pd.DataFrame:
+    """Read and validate a card-per-row CSV, keeping mainboard and sideboard separate."""
+    name = filename or getattr(file, "name", "")
+    if Path(name).suffix.lower() != ".csv":
+        raise DataValidationError("El archivo de cartas debe tener formato CSV.")
+    try:
+        raw = file.getvalue() if hasattr(file, "getvalue") else file.read()
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8-sig")
+        reader = csv.DictReader(raw.splitlines())
+        if reader.fieldnames is None or not set(CARD_REQUIRED_FIELDS).issubset(reader.fieldnames):
+            raise DataValidationError(
+                "Faltan columnas obligatorias para cartas: "
+                + ", ".join(CARD_REQUIRED_FIELDS)
+                + "."
+            )
+        records = list(reader)
+    except DataValidationError:
+        raise
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise DataValidationError(f"No se pudo leer el archivo de cartas: {exc}") from exc
+    if not records:
+        raise DataValidationError("El archivo de cartas no contiene registros.")
+
+    normalized: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, str]] = set()
+    per_deck_metadata: dict[tuple[str, str], tuple[str, ...]] = {}
+    for index, record in enumerate(records, start=2):
+        row = {field: _clean(record.get(field)) for field in CARD_FIELDS}
+        missing = [field for field in CARD_REQUIRED_FIELDS if not row[field]]
+        if missing:
+            raise DataValidationError(
+                f"La fila {index} no tiene valores para: {', '.join(missing)}."
+            )
+        row["zone"] = row["zone"].lower()
+        if row["zone"] not in {"mainboard", "sideboard"}:
+            raise DataValidationError(
+                f"La zona de la fila {index} debe ser mainboard o sideboard."
+            )
+        try:
+            quantity = int(row["quantity"])
+            if quantity <= 0:
+                raise ValueError
+        except ValueError:
+            raise DataValidationError(
+                f"La cantidad de la fila {index} debe ser un entero mayor que cero."
+            ) from None
+        row["quantity"] = quantity
+
+        key = (row["tournament_id"], row["deck_id"], row["zone"], row["card_name"])
+        if key in seen:
+            raise DataValidationError(
+                f"La carta {row['card_name']} está repetida en la fila {index} "
+                "para la misma lista y zona."
+            )
+        seen.add(key)
+
+        deck_key = (row["tournament_id"], row["deck_id"])
+        metadata = tuple(row[field] for field in ("player", "placement", "archetype"))
+        if deck_key in per_deck_metadata and per_deck_metadata[deck_key] != metadata:
+            raise DataValidationError(
+                f"Los metadatos de la lista {row['deck_id']} no son consistentes "
+                f"en la fila {index}."
+            )
+        per_deck_metadata[deck_key] = metadata
+        normalized.append(row)
+    return pd.DataFrame(normalized, columns=CARD_FIELDS)
 
 
 def load_label_overrides(path: str | Path) -> dict[str, str]:

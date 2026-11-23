@@ -12,7 +12,7 @@
 
 ## MVP — Requisitos y criterios de aceptación
 
-El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El análisis admite varios eventos, filtros por fecha y tipo, y métricas por arquetipo con cobertura explícita. La carga automática en memoria está implementada, pero la persistencia en SQLite y los filtros/métricas acordados siguen pendientes. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
+El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El esquema y la sincronización local SQLite están implementados; los filtros y métricas acordados siguen pendientes. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
 
 ### ING-001 — Importar archivos manuales de torneos (P0)
 **Historia:** Como propietario, quiero subir archivos CSV o JSON de listas publicadas para alimentar el sistema sin depender de una integración remota.
@@ -24,7 +24,7 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - No crea duplicados al importar dos veces el mismo torneo.
 
 ### DAT-002 — Carga local automática de torneos (P0)
-**Estado:** Prototipo implementado en memoria; adaptar a SQLite pendiente.
+**Estado:** Implementado con persistencia SQLite.
 
 **Historia:** Como propietario, quiero que al abrir la aplicación se lean automáticamente los archivos de torneos de `data/` para tener disponibles los eventos guardados sin volver a importarlos en cada sesión.
 
@@ -38,6 +38,8 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - La carga automática respeta las validaciones y reglas de análisis documentadas.
 
 ### DAT-003 — Almacenamiento relacional local SQLite (P0)
+**Estado:** Esquema, sincronización local y conexión con Streamlit implementados; validación inicial completada.
+
 **Historia:** Como propietario, quiero que el dashboard use un almacenamiento SQLite normalizado para conservar los torneos y evitar repetir metadatos del evento en cada lista.
 
 **Modelo inicial:**
@@ -138,13 +140,11 @@ Permitir que el propietario revise la etiqueta publicada de cada mazo y le asign
 **Dependencia y prioridad:** evolución posterior al MVP. La muestra incluye listas completas de los 32 mazos publicados de este evento, pero no todas las 52 participaciones; cualquier división manual debe basarse en revisar las cartas de cada lista y dejar claro ese límite de cobertura.
 
 ## Siguientes tareas para completar el MVP
-1. Diseñar e implementar el esquema SQLite y la capa de acceso a datos.
-2. Migrar la carga automática de archivos locales para que los incorpore a SQLite de forma idempotente y transaccional.
-3. Comprobar varios torneos, archivos inválidos, duplicados y conservación de etiquetas manuales.
-4. Implementar filtros temporales y por tipo de torneo con el comportamiento acordado.
-5. Calcular recuentos y porcentajes por arquetipo usando el total de listas publicadas disponibles como denominador.
-6. Mostrar cobertura y limitaciones de representatividad junto a los resultados.
-7. Validar los datos y resultados con varias fuentes/torneos publicados antes de ampliar el alcance.
+1. Ampliar comprobaciones de persistencia con varias fuentes de torneo, etiquetas manuales y conflictos entre archivos.
+2. Implementar filtros temporales y por tipo de torneo con el comportamiento acordado.
+3. Calcular recuentos y porcentajes por arquetipo usando el total de listas publicadas disponibles como denominador.
+4. Mostrar cobertura y limitaciones de representatividad junto a los resultados.
+5. Validar los datos y resultados con más torneos locales antes de ampliar el alcance.
 
 ## Descubrimiento pendiente para una fase posterior
 - Evaluar MTGpile como posible fuente futura para incorporar resultados y listas de otros Challenges. Antes de automatizar, probar varias fechas, comparar con la referencia de MTGO, medir listas publicadas frente a participantes, comprobar estabilidad de las páginas y revisar condiciones de uso. No forma parte del MVP ni requiere ampliar ahora la muestra de prueba.

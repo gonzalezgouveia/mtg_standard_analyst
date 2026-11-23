@@ -73,6 +73,8 @@ def test_saves_and_loads_manual_labels(tmp_path):
 
 def test_supplied_tournament_sample_imports():
     sample = Path(__file__).parents[1] / "data" / "standard_challenge_32_2026-11-20.csv"
+    if not sample.exists():
+        pytest.skip("Los archivos de muestra locales no se versionan en Git.")
     with sample.open(encoding="utf-8") as file:
         frame = load_tournament_file(file, sample.name)
     assert len(frame) == 32
