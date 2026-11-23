@@ -1,6 +1,6 @@
 # Diario de aprendizaje — MTG Standard Metagame
 
-**Versión:** 0.3 · **Inicio:** 21/11/2026 · **Actualizado:** 23/11/2026
+**Versión:** 0.4 · **Inicio:** 21/11/2026 · **Actualizado:** 23/11/2026
 
 Este documento registra brevemente qué hacemos, qué aprendemos y cómo colaboramos con la IA. Se actualizará al cerrar cada fase o hito importante. Los estados son orientativos y podrán cambiar.
 
@@ -52,6 +52,19 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 **Resultado y siguiente paso:** Visión y alcance aprobados. Completar y validar los criterios funcionales del MVP con datos de varios torneos.
 
 **Reflexión sobre programación con IA:** Este hito muestra un uso de la IA como apoyo para leer documentación, comparar el prototipo con los requisitos, proponer una estructura de MVP y mantener un registro claro de decisiones. La persona desarrolladora conserva el criterio y valida el comportamiento real ejecutando la aplicación; la IA ayuda a convertir esa evidencia en tareas concretas y documentación revisable.
+
+### Entrada 003 — Pruebas de Git, conexión con GitHub y permisos (23/11/2026)
+**Estado:** Terminado.
+
+**Qué hicimos:** Intentamos preparar y subir cambios del proyecto y, después, realizamos pruebas controladas con `push_test.txt`. La primera sesión no pudo escribir en el índice de Git porque `.git` estaba en modo de solo lectura, aunque sí podía editar archivos del proyecto. Más adelante, al elegir un permiso más amplio, apareció una ventana de GitHub para autorizar la conexión con la aplicación. Una vez completada esa conexión, se pudo crear y subir un commit de prueba; también se subió un commit que eliminó ese primer archivo. Finalmente, con el modo **Ask for approval / Solicitar aprobación**, se aprobó la petición concreta para preparar el segundo archivo, crear el commit y hacer push. GitHub recibió el commit y la rama local quedó sincronizada.
+
+**Qué aprendimos:** La autorización de GitHub y los permisos de Codex son dos cosas distintas. La conexión con GitHub permite autenticar las operaciones contra el repositorio remoto; el modo de permisos controla si Codex puede modificar los metadatos locales de Git y acceder a la red. Tener una de estas dos cosas no sustituye a la otra. El modo de aprobación puede funcionar sin mantener acceso total, siempre que la cuenta de GitHub ya esté conectada y se apruebe la solicitud de permisos cuando aparezca.
+
+**Decisiones y motivos:** Para trabajar con este repositorio, mantener la cuenta de GitHub conectada en la aplicación y usar **Ask for approval / Solicitar aprobación** como modo habitual. Aprobar la petición específica cuando una operación de Git necesite más acceso. Reservar **Full access / Acceso completo** para situaciones puntuales, no como requisito permanente.
+
+**Papel de la IA:** La IA preparó y ejecutó las operaciones de Git solicitadas, explicó la diferencia entre conexión remota y permisos del entorno, y comprobó el estado final de la rama. El propietario completó la autorización de GitHub y aprobó las operaciones solicitadas.
+
+**Resultado y siguiente paso:** Se comprobó que el flujo de commit y push funciona después de conectar GitHub y conceder la aprobación requerida. En futuras operaciones, verificar primero que GitHub sigue conectado y aceptar la solicitud de aprobación de Codex si aparece. Esta prueba valida el flujo de Git, no los criterios funcionales del MVP.
 
 ## Plantilla de próximas entradas
 
