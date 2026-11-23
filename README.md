@@ -1,6 +1,6 @@
 # MTG Standard Metagame Analytics — prototipo P01
 
-Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP acordado permitirá importar manualmente datos de varios torneos, filtrarlos por fecha y tipo, y consultar recuentos y porcentajes por arquetipo con cobertura explícita. La visión y el alcance están aprobados; el MVP aún está en desarrollo.
+Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP acordado usará SQLite como almacenamiento relacional persistente, importará CSV/JSON de varios torneos desde `data/`, y permitirá filtrarlos por fecha y tipo para consultar métricas por arquetipo y cobertura. La adaptación de la carga actual en memoria a SQLite y los filtros siguen en desarrollo.
 
 La primera prueba técnica ya confirmó que la muestra incluida se importa y se muestra en el dashboard. La muestra contiene 32 listas publicadas de un evento con 52 participantes, por lo que no representa a todo el torneo. La consulta remota, la publicación web y los cambios visuales se dejan para etapas posteriores.
 
@@ -15,9 +15,9 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Al iniciar, la aplicación carga automáticamente los archivos CSV/JSON de torneos guardados en `data/`; para añadir eventos nuevos, guarda allí el archivo siguiendo [data/README.md](data/README.md). También se pueden importar archivos desde el panel lateral, aunque esa carga solo dura la sesión actual. Los filtros acordados también forman parte del trabajo pendiente del MVP.
+La implementación actual carga automáticamente los archivos CSV/JSON de torneos guardados en `data/` en la sesión actual; para añadir eventos nuevos, guarda allí el archivo siguiendo [data/README.md](data/README.md). La siguiente etapa es incorporar esos registros a SQLite para conservarlos y normalizarlos. La importación desde el panel lateral es temporal hasta que se implemente el almacenamiento SQLite.
 
-Las etiquetas manuales se persisten en `data/archetype_labels.json`. Los archivos CSV/JSON de torneos guardados en `data/` se cargan al iniciar; los archivos inválidos se notifican y no impiden cargar los demás. El archivo de etiquetas no se trata como torneo.
+Las etiquetas manuales se persisten actualmente en `data/archetype_labels.json`. SQLite será el almacenamiento normalizado previsto para torneos y listas; el total real de participantes se guardará una sola vez por torneo. El formato CSV/JSON puede repetirlo por fila para facilitar la importación. La tabla de cartas se poblará cuando haya listas completas estructuradas.
 
 ## Documentación del proyecto
 

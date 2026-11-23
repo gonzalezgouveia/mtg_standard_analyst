@@ -1,6 +1,6 @@
 # Backlog inicial — MTG Standard Metagame
 
-**Versión:** 0.5
+**Versión:** 0.6
 **Fecha:** 23 de noviembre de 2026
 **Estado:** Alcance del MVP aprobado
 
@@ -12,7 +12,7 @@
 
 ## MVP — Requisitos y criterios de aceptación
 
-El MVP es una aplicación local para uso personal. Los archivos de torneos se guardan en `data/` y la aplicación los carga automáticamente al iniciarse; añadir nuevos torneos sigue siendo una tarea manual. El análisis admite varios eventos, filtros por fecha y tipo, y métricas por arquetipo con cobertura explícita. La carga automática ya está implementada; los filtros y las métricas acordadas siguen pendientes. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
+El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El análisis admite varios eventos, filtros por fecha y tipo, y métricas por arquetipo con cobertura explícita. La carga automática en memoria está implementada, pero la persistencia en SQLite y los filtros/métricas acordados siguen pendientes. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
 
 ### ING-001 — Importar archivos manuales de torneos (P0)
 **Historia:** Como propietario, quiero subir archivos CSV o JSON de listas publicadas para alimentar el sistema sin depender de una integración remota.
@@ -24,25 +24,48 @@ El MVP es una aplicación local para uso personal. Los archivos de torneos se gu
 - No crea duplicados al importar dos veces el mismo torneo.
 
 ### DAT-002 — Carga local automática de torneos (P0)
-**Estado:** Implementado.
+**Estado:** Prototipo implementado en memoria; adaptar a SQLite pendiente.
 
 **Historia:** Como propietario, quiero que al abrir la aplicación se lean automáticamente los archivos de torneos de `data/` para tener disponibles los eventos guardados sin volver a importarlos en cada sesión.
 
 **Aceptación:**
-- Al iniciar, detecta y carga los archivos CSV/JSON de torneos compatibles ubicados en `data/`.
+- Al iniciar, detecta archivos CSV/JSON de torneos compatibles ubicados en `data/` e incorpora sus registros a SQLite.
 - La incorporación de torneos nuevos sigue siendo manual: se añade el archivo a la carpeta local de datos.
 - Los archivos auxiliares, como `archetype_labels.json`, no se tratan como archivos de torneos.
 - Se informan los archivos inválidos sin impedir que se carguen los demás archivos válidos.
-- Los mismos archivos no producen registros duplicados.
+- Repetir el inicio o procesar de nuevo los mismos archivos no crea listas duplicadas.
 - La carga automática respeta las validaciones y reglas de análisis documentadas.
+
+### DAT-003 — Almacenamiento relacional local SQLite (P0)
+**Historia:** Como propietario, quiero que el dashboard use un almacenamiento SQLite normalizado para conservar los torneos y evitar repetir metadatos del evento en cada lista.
+
+**Modelo inicial:**
+- `tournaments`: clave `tournament_id`; fecha, título/tipo original, categoría normalizada, total real opcional de participantes, fuente y momento de importación.
+- `decks`: clave compuesta por torneo y `deck_id`; jugador, posición, arquetipo original y datos disponibles de la lista. Cada lista pertenece a un torneo.
+- `deck_cards`: lista, identificador/nombre de carta, zona (principal o banquillo) y cantidad; se poblará cuando existan fuentes con cartas completas y estructura fiable.
+- No crear una tabla de jugadores separada inicialmente; el jugador se almacena en la lista. Se reconsiderará si se necesita identificar y analizar jugadores entre eventos.
+- Una fila de `decks` es una instancia concreta de una lista en un evento. El arquetipo es una etiqueta clasificatoria, no una entidad que identifique o fusione listas. Un jugador en dos torneos tiene dos registros de lista independientes; cada variación de cartas pertenece a su registro.
+
+**Aceptación:**
+- Crear o inicializar la base SQLite local de forma reproducible.
+- Guardar el total de participantes una vez por torneo; validar que los valores repetidos del archivo de entrada sean consistentes antes de importarlo.
+- Relacionar cada lista con su torneo mediante claves y restricciones de integridad.
+- Importar un archivo completo dentro de una transacción: un error no deja un torneo parcialmente actualizado.
+- Tratar los archivos como snapshots completos de los torneos que contienen. Si el snapshot no cambió, la importación es una operación sin cambios y no duplica filas.
+- Si llega una versión completa válida modificada de un torneo, reemplazar en una transacción sus listas y cartas asociadas. Si la validación o escritura falla, mantener intacta la versión previamente almacenada.
+- Si varios archivos aportan exactamente el mismo snapshot de un torneo, no duplicarlo. Si aportan snapshots distintos del mismo torneo, informar del conflicto y no escoger automáticamente.
+- Si una lista desaparece en el nuevo snapshot, actualizar los datos del torneo sin borrar sus etiquetas manuales; conservarlas y señalarlas como huérfanas para revisión.
+- Mantener los CSV/JSON como formatos de entrada y no como tablas operativas del dashboard.
+- Preservar las etiquetas manuales existentes durante la transición o migrarlas con sus claves actuales.
+- No inventar datos de cartas cuando la fuente no proporcione listas completas.
 
 ### DAT-001 — Modelo y calidad de datos (P0)
 **Aceptación:**
-- Almacena datos normalizados con referencia a la fuente y momento de importación.
+- Almacena datos normalizados en SQLite con referencia a la fuente y momento de importación.
 - Distingue datos ausentes de valores cero.
 - Permite actualizar un torneo existente sin dejar datos parciales ante un fallo.
 - Conserva el nombre original del evento y, cuando la fuente lo indique, el total real de participantes. No deduce participantes de sufijos como 16, 32 o 64.
-- Guarda el total real de participantes como metadato opcional del torneo cuando la fuente lo proporcione; en el formato por filas se repite el mismo valor para todas las listas del evento.
+- Guarda el total real de participantes una sola vez como metadato opcional del torneo. El formato de entrada por filas puede repetir el mismo valor para todas las listas; la importación lo normaliza a un único dato de torneo.
 
 ### ANA-001 — Métricas de metajuego (P0)
 **Aceptación:**
@@ -114,12 +137,13 @@ Permitir que el propietario revise la etiqueta publicada de cada mazo y le asign
 **Dependencia y prioridad:** evolución posterior al MVP. La muestra actual no incluye las listas completas de cartas, así que no permite separar subarquetipos con fiabilidad.
 
 ## Siguientes tareas para completar el MVP
-1. Comprobar la carga automática con varios torneos locales, un archivo inválido y las etiquetas guardadas.
-2. Implementar filtros temporales y por tipo de torneo con el comportamiento acordado.
-3. Calcular recuentos y porcentajes por arquetipo usando el total de listas publicadas disponibles como denominador.
-4. Mostrar cobertura y limitaciones de representatividad junto a los resultados.
-5. Validar los datos y resultados con varias fuentes/torneos publicados.
-6. Revisar los criterios de aceptación y documentar el resultado antes de ampliar el alcance.
+1. Diseñar e implementar el esquema SQLite y la capa de acceso a datos.
+2. Migrar la carga automática de archivos locales para que los incorpore a SQLite de forma idempotente y transaccional.
+3. Comprobar varios torneos, archivos inválidos, duplicados y conservación de etiquetas manuales.
+4. Implementar filtros temporales y por tipo de torneo con el comportamiento acordado.
+5. Calcular recuentos y porcentajes por arquetipo usando el total de listas publicadas disponibles como denominador.
+6. Mostrar cobertura y limitaciones de representatividad junto a los resultados.
+7. Validar los datos y resultados con varias fuentes/torneos publicados antes de ampliar el alcance.
 
 ## Descubrimiento pendiente para una fase posterior
 - Identificar y validar fuentes remotas, disponibilidad, estabilidad y condiciones de uso antes de automatizar.

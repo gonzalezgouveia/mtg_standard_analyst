@@ -12,7 +12,7 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 - [x] **4. Refinar y priorizar el backlog:** MVP local, importación manual CSV/JSON de varios torneos, filtros por fecha y tipo, recuentos y porcentajes por arquetipo y cobertura visible. Rediseño visual, automatización y acceso público quedan fuera.
 - [x] **5. Diseño funcional y de datos:** reglas de filtros, denominadores, cobertura y evolución temporal acordadas. La validación de más fuentes sigue pendiente.
 - [x] **6. Prueba técnica inicial:** cargar la muestra en Streamlit y comprobar que se visualiza. La viabilidad de fuentes remotas queda pendiente y fuera del MVP.
-- [ ] **7. Diseño de arquitectura:** Streamlit y Python ya están elegidos para el prototipo; queda diseñar e implementar la lectura automática de torneos desde `data/` al iniciar.
+- [ ] **7. Diseño de arquitectura:** Streamlit y Python ya están elegidos; el MVP usará SQLite para persistencia local y queda pendiente completar esa capa relacional.
 - [x] **8. Preparación del desarrollo:** repositorio, entorno local, documentación, pruebas iniciales y flujo de trabajo con IA preparados.
 - [ ] **9. Desarrollo iterativo del MVP:** en curso; completar filtros, métricas y cobertura.
 - [ ] **10. Pruebas y validación:** verificar resultados, calidad de datos y requisitos.
@@ -97,26 +97,41 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Qué hicimos:** Al revisar si el MVP debía conservar datos entre sesiones, el propietario aclaró el flujo deseado: al abrir la aplicación, esta debe leer automáticamente la carpeta local de datos y cargar los torneos disponibles. No quiere volver a importar los mismos torneos cada vez que inicia Streamlit.
 
-**Qué aprendimos:** Persistencia no significa necesariamente crear una base de datos. En este MVP, los propios archivos locales de torneos pueden ser la fuente duradera: añadir un nuevo archivo a `data/` incorpora un evento y el inicio de la aplicación vuelve a leer los archivos existentes. La etiqueta manual guardada en `archetype_labels.json` es un archivo auxiliar y no debe confundirse con un torneo.
+**Qué aprendimos:** En la decisión inicial se consideró que los archivos locales bastaban como almacenamiento duradero. Esa decisión se revisó después: el propietario aprobó SQLite como almacenamiento relacional local, mientras que los archivos de `data/` siguen siendo la entrada manual. La etiqueta guardada en `archetype_labels.json` es un archivo auxiliar y no debe confundirse con un torneo.
 
-**Decisiones y motivos:** La carga automática desde `data/` forma parte del alcance aprobado del MVP. La recolección de nuevos datos continúa siendo manual; quedan fuera la consulta remota y la actualización automática. El prototipo actual aún no cumple este requisito: conserva los torneos cargados solo en la sesión de Streamlit. Se actualizan visión, backlog, README, guía de datos e instrucciones del proyecto para reflejar esa diferencia entre objetivo y estado actual.
+**Decisiones y motivos:** La carga automática desde `data/` forma parte del alcance aprobado del MVP. En esta entrada se planteó inicialmente usar los archivos como fuente duradera; esa parte fue sustituida por la decisión de usar SQLite. La recolección de nuevos datos continúa siendo manual; quedan fuera la consulta remota y la actualización automática.
 
 **Papel de la IA:** La IA detectó que la pregunta de persistencia seguía marcada como pendiente y explicó el comportamiento actual. El propietario corrigió el supuesto y concretó el flujo esperado; la IA registró esa decisión en la documentación sin implementar todavía el cambio.
 
-**Resultado y siguiente paso:** Requisito cerrado a nivel de producto. Implementar la lectura automática de CSV/JSON de torneos al iniciar, ignorar archivos auxiliares y mostrar errores de archivos inválidos sin bloquear los válidos. Después, comprobar el comportamiento con varios torneos guardados localmente.
+**Resultado y siguiente paso:** Se implementó la primera lectura automática de CSV/JSON desde `data/`, en memoria. Posteriormente el propietario aprobó SQLite para la persistencia normalizada; adaptar esta carga al almacenamiento relacional queda pendiente.
 
 ### Entrada 007 — Carga automática desde la carpeta local (23/11/2026)
 **Estado:** Implementado; validación funcional pendiente.
 
 **Qué hicimos:** La aplicación ahora busca en `data/` archivos CSV y JSON al inicializar la sesión de Streamlit, los valida con el esquema habitual y carga los registros válidos. Informa por separado de archivos que no se puedan leer o validar. La detección por extensión deja fuera los archivos auxiliares de etiquetas. La importación desde el panel lateral sigue disponible y es temporal; para que un archivo aparezca en futuras sesiones hay que guardarlo en `data/`.
 
-**Qué aprendimos:** La persistencia local puede resolverse usando los archivos de datos existentes como fuente duradera y cargándolos al inicio, sin introducir una base de datos para este MVP. La validación combinada también evita contar dos veces el mismo mazo si aparece duplicado entre archivos.
+**Qué aprendimos:** La primera solución carga los archivos de datos al inicio y valida duplicados, pero los datos combinados permanecen en la sesión. La decisión posterior de usar SQLite permitirá mantenerlos normalizados y persistentes entre sesiones.
 
 **Decisiones y motivos:** Se mantiene la incorporación manual de nuevos torneos y se excluyen la consulta remota y la actualización automática. Un archivo inválido no debe bloquear la carga de otros válidos.
 
 **Papel de la IA:** La IA implementó el lector de carpeta, lo conectó al inicio de Streamlit y alineó la documentación con el comportamiento. La validación visual de la aplicación y las pruebas con varios archivos quedan pendientes.
 
-**Resultado y siguiente paso:** La carga automática está implementada. Validar abriendo la aplicación con varios archivos de torneo en `data/`, incluyendo un archivo inválido y las etiquetas guardadas, y confirmar que no hay duplicados ni errores de carga.
+**Resultado y siguiente paso:** La carga automática desde carpeta está implementada en memoria y el propietario comprobó que la muestra aparece sin subirla manualmente. Siguiente paso: integrar la carga con SQLite y validar varios torneos.
+
+### Entrada 008 — Modelo relacional con SQLite (23/11/2026)
+**Estado:** Decisión aprobada; documentación actualizada; implementación pendiente.
+
+**Qué hicimos:** Al revisar por qué el total de participantes se repetía en cada fila del archivo, el propietario propuso separar los metadatos del torneo de sus listas y, más adelante, las cartas de cada lista. Aprobó adaptar el alcance del MVP para usar SQLite y pidió actualizar la documentación del proyecto.
+
+**Qué aprendimos:** Repetir `participants_total` en CSV/JSON es cómodo para un formato de importación por filas, pero en el modelo relacional el total debe almacenarse una vez por torneo. Las listas publicadas pertenecen a un torneo; las cartas pertenecen a una lista. Los archivos CSV/JSON pueden seguir facilitando la incorporación manual sin ser el almacenamiento operativo del dashboard.
+
+**Decisiones y motivos:** SQLite será el almacenamiento local persistente del MVP. El esquema separará torneos y listas, y preverá una relación de cartas por lista. El jugador se mantiene como atributo de la lista por ahora; no se crea entidad de jugador hasta que haya una necesidad concreta de seguimiento entre eventos. La tabla de cartas se poblará solo cuando existan listas completas y estructuradas; la muestra actual no las contiene. La carga de archivos desde `data/` debe incorporarlos a SQLite de manera idempotente y segura.
+
+**Política de identidad y actualización acordada:** Cada lista es una instancia del torneo y jugador, con clave `(tournament_id, deck_id)`; el arquetipo no es la identidad de la lista. El mismo arquetipo puede corresponder a listas con cartas distintas, y un jugador tendrá registros independientes en torneos distintos. Archivos idénticos no duplican datos. Una versión completa modificada y válida reemplaza la anterior en una transacción; si falla, se conservan los datos previos. Si hay snapshots contradictorios simultáneos del mismo torneo, la aplicación informa el conflicto y no escoge uno. Etiquetas manuales de listas que desaparezcan se conservan como huérfanas para revisión.
+
+**Papel de la IA:** La IA explicó las ventajas de separar las entidades y recomendó mantener CSV/JSON como entrada, normalizar los metadatos en SQLite y posponer la tabla independiente de jugadores. Tras la aprobación del propietario, actualizó visión, backlog, README, guía de datos, instrucciones y este diario. No implementó el almacenamiento SQLite en este cambio documental.
+
+**Resultado y siguiente paso:** El modelo de datos y el cambio de alcance quedan documentados. Diseñar e implementar el esquema SQLite y adaptar la carga automática de `data/` antes de desarrollar filtros y métricas sobre la nueva capa de datos.
 
 ## Plantilla de próximas entradas
 
