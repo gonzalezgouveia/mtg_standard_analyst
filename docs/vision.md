@@ -23,7 +23,7 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 - Usar SQLite como almacenamiento local relacional persistente. Mantener los archivos CSV o JSON en `data/` como formato de entrada; al abrir la aplicación se incorporan automáticamente los archivos válidos y el dashboard consulta los datos guardados. Los archivos nuevos se incorporan manualmente a esa carpeta; no se requiere volver a importarlos en cada sesión. La importación HTML y cualquier consulta remota quedan sujetas a validación posterior.
 - Separar la información de torneos de las listas publicadas: el total real de participantes se guarda una vez en el torneo, mientras que jugador, posición, arquetipo y datos de lista corresponden a cada lista.
 - Tratar cada lista como una instancia específica de jugador y torneo, identificada por la clave compuesta `(tournament_id, deck_id)`. El arquetipo clasifica listas, pero no define ni fusiona su identidad; las cartas de cada lista se vinculan a esa instancia.
-- Prever registros de cartas vinculados a cada lista cuando haya listas completas y datos estructurados disponibles. La muestra actual no incluye el contenido de las listas, por lo que la tabla puede estar vacía hasta contar con esos datos.
+- Guardar cartas y cantidades vinculadas a cada lista cuando la fuente las publique. La muestra incluye ahora un archivo complementario de cartas para las 32 listas publicadas del top 32; no incluye los otros participantes del evento.
 - Mostrar distribución por arquetipo mediante recuentos y porcentajes sobre las listas publicadas importadas que pasan los filtros. Los mazos sin arquetipo se incluyen en el denominador como categoría «Sin etiquetar».
 - Filtro temporal basado en la fecha del torneo: 7, 15 o 30 días, o 2 o 3 meses naturales; el periodo predeterminado es 30 días e incluye hoy.
 - Filtro por categoría normalizada: Ambos (predeterminado), Standard Challenge o Standard Showcase Challenge. Se conserva el nombre original del evento; sufijos numéricos como 16, 32 o 64 no se interpretan como total de participantes.
@@ -63,7 +63,7 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 - Documentar y validar cada hito antes de avanzar.
 
 ## 7. Decisiones pendientes
-- Fuente exacta y viabilidad de la extracción remota de torneos.
+- Viabilidad de fuentes remotas futuras. MTGpile queda como candidata para evaluación posterior, no como fuente aprobada ni dependencia del MVP.
 - Criterios detallados para agrupar o dividir arquetipos manualmente, como evolución posterior al MVP.
 - Fuente y formato fiables para importar listas completas y cartas individuales; la tabla relacional se prevé, pero no se inventarán cartas ausentes.
 - Arquitectura futura y estrategia de despliegue, si se decide publicar el producto.

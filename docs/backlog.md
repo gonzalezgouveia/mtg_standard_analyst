@@ -30,6 +30,7 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 
 **Aceptación:**
 - Al iniciar, detecta archivos CSV/JSON de torneos compatibles ubicados en `data/` e incorpora sus registros a SQLite.
+- Solo procesa los archivos de metadatos de torneos definidos por el esquema de importación; los CSV auxiliares por carta y las muestras bajo `data/examples/` no se interpretan como archivos de torneo.
 - La incorporación de torneos nuevos sigue siendo manual: se añade el archivo a la carpeta local de datos.
 - Los archivos auxiliares, como `archetype_labels.json`, no se tratan como archivos de torneos.
 - Se informan los archivos inválidos sin impedir que se carguen los demás archivos válidos.
@@ -42,7 +43,7 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 **Modelo inicial:**
 - `tournaments`: clave `tournament_id`; fecha, título/tipo original, categoría normalizada, total real opcional de participantes, fuente y momento de importación.
 - `decks`: clave compuesta por torneo y `deck_id`; jugador, posición, arquetipo original y datos disponibles de la lista. Cada lista pertenece a un torneo.
-- `deck_cards`: lista, identificador/nombre de carta, zona (principal o banquillo) y cantidad; se poblará cuando existan fuentes con cartas completas y estructura fiable.
+- `deck_cards`: lista, identificador/nombre de carta, zona (principal o banquillo) y cantidad. La muestra de este evento ya proporciona cartas estructuradas para sus 32 listas publicadas.
 - No crear una tabla de jugadores separada inicialmente; el jugador se almacena en la lista. Se reconsiderará si se necesita identificar y analizar jugadores entre eventos.
 - Una fila de `decks` es una instancia concreta de una lista en un evento. El arquetipo es una etiqueta clasificatoria, no una entidad que identifique o fusione listas. Un jugador en dos torneos tiene dos registros de lista independientes; cada variación de cartas pertenece a su registro.
 
@@ -134,7 +135,7 @@ Permitir que el propietario revise la etiqueta publicada de cada mazo y le asign
 - Recalcular recuentos y porcentajes tras una reclasificación, manteniendo la regla del denominador que incluye «Sin etiquetar».
 - No inferir subarquetipos automáticamente; la división requiere revisar listas completas o disponer de criterios verificables.
 
-**Dependencia y prioridad:** evolución posterior al MVP. La muestra actual no incluye las listas completas de cartas, así que no permite separar subarquetipos con fiabilidad.
+**Dependencia y prioridad:** evolución posterior al MVP. La muestra incluye listas completas de los 32 mazos publicados de este evento, pero no todas las 52 participaciones; cualquier división manual debe basarse en revisar las cartas de cada lista y dejar claro ese límite de cobertura.
 
 ## Siguientes tareas para completar el MVP
 1. Diseñar e implementar el esquema SQLite y la capa de acceso a datos.
@@ -146,7 +147,8 @@ Permitir que el propietario revise la etiqueta publicada de cada mazo y le asign
 7. Validar los datos y resultados con varias fuentes/torneos publicados antes de ampliar el alcance.
 
 ## Descubrimiento pendiente para una fase posterior
-- Identificar y validar fuentes remotas, disponibilidad, estabilidad y condiciones de uso antes de automatizar.
+- Evaluar MTGpile como posible fuente futura para incorporar resultados y listas de otros Challenges. Antes de automatizar, probar varias fechas, comparar con la referencia de MTGO, medir listas publicadas frente a participantes, comprobar estabilidad de las páginas y revisar condiciones de uso. No forma parte del MVP ni requiere ampliar ahora la muestra de prueba.
+- Contrastar otras fuentes remotas, disponibilidad, estabilidad y condiciones de uso antes de automatizar.
 - Priorizar mejoras visuales después de completar la validación funcional del MVP.
 
 ## Fuera de alcance inicial

@@ -133,6 +133,32 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Resultado y siguiente paso:** El modelo de datos y el cambio de alcance quedan documentados. Diseñar e implementar el esquema SQLite y adaptar la carga automática de `data/` antes de desarrollar filtros y métricas sobre la nueva capa de datos.
 
+### Entrada 009 — Primera muestra de cartas de torneo (23/11/2026)
+**Estado:** Muestra creada; importación a SQLite pendiente.
+
+**Qué hicimos:** A partir de las páginas públicas individuales de MTGpile para el Standard Challenge 32 del 20 de noviembre, preparamos un CSV complementario con una fila por carta, mazo y zona. Incluye las 32 listas publicadas del top 32; cada una suma 60 cartas principales y 15 cartas de banquillo. El archivo contiene 988 filas de carta y conserva la URL fuente en cada una.
+
+**Qué aprendimos:** El sitio muestra MTGO como fuente del torneo y publica cartas en sus páginas individuales. El acceso directo a la página oficial de MTGO requería JavaScript en la herramienta de lectura utilizada; la recopilación se hizo desde páginas públicas de MTGpile, sin conectar una cuenta ni un cliente de MTGO. El torneo tuvo 52 participantes, pero solo están disponibles estas 32 listas; la muestra de cartas no representa todas las participaciones.
+
+**Decisiones y motivos:** Mantener el archivo de cartas separado del CSV de metadatos, con identificadores de torneo y lista y zona de mazo. Guardarlo bajo `data/examples/` para que el cargador de archivos de torneo no lo confunda con otro evento. Registrar procedencia y carácter provisional; no incorporarlo todavía al importador actual.
+
+**Papel de la IA:** La IA consultó la página del evento, extrajo los datos estructurados de las 32 páginas de listas, cotejó jugador, posición y arquetipo con el CSV existente y comprobó los totales de cartas por lista. También documentó la cobertura y los límites de la fuente.
+
+**Resultado y siguiente paso:** El CSV provisional está listo para revisar y sirve como muestra para la futura tabla `deck_cards`. Después, implementar un importador específico y validar el almacenamiento SQLite; no usarlo para afirmar cobertura total del evento.
+
+### Entrada 010 — MTGpile como posible fuente futura (23/11/2026)
+**Estado:** Decisión registrada; evaluación futura pendiente.
+
+**Qué hicimos:** Tras consultar las páginas públicas de MTGpile para crear la muestra de cartas, el propietario indicó que el sitio podría ser útil para traer datos de otros Challenges en el futuro. Para las pruebas actuales, considera suficiente el torneo ya incorporado y sus listas publicadas.
+
+**Qué aprendimos:** Una página que permite leer resultados y listas no queda automáticamente validada como fuente estable para un proceso de ingesta. Antes de automatizarla habrá que comprobar varias fechas y eventos, la cobertura, los cambios de formato y las condiciones de uso, y comparar los resultados con la referencia de MTGO.
+
+**Decisiones y motivos:** MTGpile queda documentada como candidata futura, no como integración aprobada ni parte del MVP. No se ampliará ahora la recolección: la muestra existente basta para continuar las pruebas del esquema y la importación.
+
+**Papel de la IA:** La IA explicó que las páginas públicas estáticas parecen técnicamente accesibles, pero que la viabilidad de una extracción automatizada requiere validación adicional. El propietario decidió conservarla como opción futura y mantener acotada la muestra actual.
+
+**Resultado y siguiente paso:** Se añadió una tarea futura al backlog. Evaluar la fuente después, con una prueba controlada en varios torneos, antes de considerar una sincronización automatizada.
+
 ## Plantilla de próximas entradas
 
 ### Entrada NNN — [Fase o hito] ([fecha])

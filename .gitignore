@@ -3,4 +3,5 @@
 .pytest-tmp/
 __pycache__/
 *.py[cod]
-data/archetype_labels.json
+/data/**
+!/data/README.md
