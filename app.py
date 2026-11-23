@@ -8,19 +8,26 @@ from src.data import (
     add_display_archetype,
     deck_key,
     load_label_overrides,
+    load_tournament_directory,
     load_tournament_file,
     save_label_overrides,
 )
 
 ROOT = Path(__file__).parent
 LABELS_PATH = ROOT / "data" / "archetype_labels.json"
+DATA_PATH = ROOT / "data"
 
 st.set_page_config(page_title="MTG Standard Metagame", layout="wide")
 st.title("MTG Standard Metagame Analytics")
-st.caption("Análisis de las listas publicadas e importadas manualmente.")
+st.caption("Análisis local de listas publicadas guardadas en la carpeta de datos.")
 
 if "tournaments" not in st.session_state:
-    st.session_state.tournaments = []
+    st.session_state.tournaments, startup_errors = load_tournament_directory(DATA_PATH)
+    st.session_state.startup_errors = startup_errors
+if st.session_state.get("startup_errors"):
+    with st.expander("Archivos de datos que no se pudieron cargar"):
+        for error in st.session_state.startup_errors:
+            st.warning(error)
 if "label_overrides" not in st.session_state:
     try:
         st.session_state.label_overrides = load_label_overrides(LABELS_PATH)
@@ -29,6 +36,7 @@ if "label_overrides" not in st.session_state:
         st.error(str(exc))
 
 with st.sidebar:
+    st.caption("Al iniciar, se cargan los CSV/JSON de torneos guardados en la carpeta `data`. Para conservar un archivo importado, guárdalo allí.")
     st.header("Importar torneo")
     uploaded = st.file_uploader("Archivo CSV o JSON", type=["csv", "json"])
     if uploaded is not None and st.button("Importar archivo", type="primary"):
@@ -50,8 +58,8 @@ with st.sidebar:
 
 if not st.session_state.tournaments:
     st.info(
-        "Todavía no hay datos importados. Descarga o prepara manualmente un CSV o JSON "
-        "con las listas publicadas y súbelo desde el panel lateral. No se consultan datos de MTGO automáticamente."
+        "No se encontraron torneos válidos en la carpeta `data`. Guarda allí un CSV o JSON "
+        "con las listas publicadas, o impórtalo desde el panel lateral. No se consultan datos de MTGO automáticamente."
     )
     with st.expander("Formato de importación"):
         st.code(

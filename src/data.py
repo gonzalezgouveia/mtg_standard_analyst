@@ -11,7 +11,14 @@ from typing import Any
 import pandas as pd
 
 REQUIRED_FIELDS = ("tournament_id", "tournament_date", "tournament_type", "deck_id")
-OPTIONAL_FIELDS = ("player", "placement", "archetype", "decklist", "source_url")
+OPTIONAL_FIELDS = (
+    "player",
+    "placement",
+    "archetype",
+    "decklist",
+    "source_url",
+    "participants_total",
+)
 FIELDS = REQUIRED_FIELDS + OPTIONAL_FIELDS
 
 
@@ -47,9 +54,27 @@ def validate_records(records: list[dict[str, Any]]) -> pd.DataFrame:
             raise DataValidationError(
                 f"La fecha del registro {index} no es válida; usa YYYY-MM-DD."
             ) from None
+        if row["participants_total"]:
+            try:
+                participants_total = int(row["participants_total"])
+                if participants_total <= 0:
+                    raise ValueError
+            except ValueError:
+                raise DataValidationError(
+                    f"El total de participantes del registro {index} debe ser un entero mayor que cero."
+                ) from None
+            row["participants_total"] = str(participants_total)
         normalized.append(row)
 
     frame = pd.DataFrame(normalized, columns=FIELDS)
+    for tournament_id, event in frame.groupby("tournament_id", sort=False):
+        totals = set(event["participants_total"]) - {""}
+        has_missing_total = (event["participants_total"] == "").any()
+        if len(totals) > 1 or (len(totals) == 1 and has_missing_total):
+            raise DataValidationError(
+                "participants_total debe tener el mismo valor en todas las filas del torneo "
+                f"{tournament_id}, o estar vacío en todas."
+            )
     duplicates = frame.duplicated(["tournament_id", "deck_id"], keep=False)
     if duplicates.any():
         raise DataValidationError("Hay deck_id repetidos dentro del mismo torneo.")
@@ -75,6 +100,30 @@ def load_tournament_file(file: Any, filename: str | None = None) -> pd.DataFrame
     except (UnicodeDecodeError, json.JSONDecodeError, csv.Error) as exc:
         raise DataValidationError(f"No se pudo leer el archivo: {exc}") from exc
     return validate_records(records)
+
+
+def load_tournament_directory(directory: str | Path) -> tuple[list[pd.DataFrame], list[str]]:
+    """Load valid tournament CSV/JSON files from a directory, reporting bad files individually."""
+    directory = Path(directory)
+    if not directory.exists():
+        return [], []
+
+    frames: list[pd.DataFrame] = []
+    errors: list[str] = []
+    for path in sorted(directory.iterdir(), key=lambda item: item.name.lower()):
+        if not path.is_file() or path.suffix.lower() not in {".csv", ".json"}:
+            continue
+        try:
+            with path.open("rb") as file:
+                incoming = load_tournament_file(file, path.name)
+            if frames:
+                # Validate across files as well, so duplicate decks cannot be counted twice.
+                combined = pd.concat([*frames, incoming], ignore_index=True)
+                validate_records(combined.to_dict("records"))
+            frames.append(incoming)
+        except (DataValidationError, OSError) as exc:
+            errors.append(f"{path.name}: {exc}")
+    return frames, errors
 
 
 def load_label_overrides(path: str | Path) -> dict[str, str]:

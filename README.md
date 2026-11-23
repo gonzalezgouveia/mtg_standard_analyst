@@ -15,9 +15,9 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-En la primera apertura se muestra un estado vacío con instrucciones. Prepara un CSV UTF-8 o JSON siguiendo [data/README.md](data/README.md), e impórtalo desde el panel lateral. La aplicación actual permite cargar archivos y mostrar los datos; los filtros acordados forman parte del trabajo pendiente del MVP.
+Al iniciar, la aplicación carga automáticamente los archivos CSV/JSON de torneos guardados en `data/`; para añadir eventos nuevos, guarda allí el archivo siguiendo [data/README.md](data/README.md). También se pueden importar archivos desde el panel lateral, aunque esa carga solo dura la sesión actual. Los filtros acordados también forman parte del trabajo pendiente del MVP.
 
-Las etiquetas manuales se persisten en `data/archetype_labels.json`. El estado de los torneos importados se mantiene en la sesión actual de Streamlit; vuelve a importar los archivos al iniciar una sesión nueva. La decisión sobre persistencia de los torneos entre sesiones sigue pendiente.
+Las etiquetas manuales se persisten en `data/archetype_labels.json`. Los archivos CSV/JSON de torneos guardados en `data/` se cargan al iniciar; los archivos inválidos se notifican y no impiden cargar los demás. El archivo de etiquetas no se trata como torneo.
 
 ## Documentación del proyecto
 

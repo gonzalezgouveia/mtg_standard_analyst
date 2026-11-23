@@ -1,11 +1,11 @@
 # Visión de producto — MTG Standard Metagame
 
-**Versión:** 0.2  
-**Fecha:** 23 de noviembre de 2026  
+**Versión:** 0.4
+**Fecha:** 23 de noviembre de 2026
 **Estado:** Aprobada para orientar el MVP
 
 ## 1. Propósito
-Crear una aplicación web de análisis del metajuego competitivo de Magic: The Gathering en formato Standard, centrada inicialmente en torneos Standard Challenge y Showcase Challenge. Su objetivo principal es ayudar al propietario a preparar torneos mediante información reciente y comprensible sobre arquetipos, presencia en el metajuego y evolución temporal.
+Crear una aplicación web de análisis del metajuego competitivo de Magic: The Gathering en formato Standard, centrada inicialmente en torneos Standard Challenge y Standard Showcase Challenge. Su objetivo principal es ayudar al propietario a preparar torneos mediante información reciente y comprensible sobre arquetipos, presencia en el metajuego y evolución temporal.
 
 Como objetivo secundario, el producto podrá publicarse en Internet para otros jugadores y funcionar como portfolio técnico de ingeniería y análisis de datos, incluyendo el desarrollo asistido por IA.
 
@@ -20,12 +20,15 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 ## 4. Alcance funcional previsto
 ### MVP
 - Aplicación local para uso personal, enfocada en preparar torneos de Standard.
-- Importar manualmente CSV o JSON con listas publicadas de varios torneos. La importación HTML y cualquier consulta remota quedan sujetas a validación posterior.
-- Mostrar distribución por arquetipo mediante recuentos y porcentajes calculados sobre las listas publicadas disponibles.
-- Filtro temporal: 7, 15, 30 días (por defecto), 2 meses y 3 meses.
-- Filtro de torneo: ambos (por defecto), Standard Challenge o Showcase Challenge.
+- Mantener los archivos CSV o JSON de torneos en la carpeta local `data/` y cargar automáticamente todos los torneos válidos al abrir la aplicación. Los archivos nuevos se incorporan manualmente a esa carpeta; no se requiere volver a importarlos en cada sesión. La importación HTML y cualquier consulta remota quedan sujetas a validación posterior.
+- Mostrar distribución por arquetipo mediante recuentos y porcentajes sobre las listas publicadas importadas que pasan los filtros. Los mazos sin arquetipo se incluyen en el denominador como categoría «Sin etiquetar».
+- Filtro temporal basado en la fecha del torneo: 7, 15 o 30 días, o 2 o 3 meses naturales; el periodo predeterminado es 30 días e incluye hoy.
+- Filtro por categoría normalizada: Ambos (predeterminado), Standard Challenge o Standard Showcase Challenge. Se conserva el nombre original del evento; sufijos numéricos como 16, 32 o 64 no se interpretan como total de participantes.
+- Evolución temporal agrupada por fecha del torneo. Si hay varios eventos seleccionados en la misma fecha, se suman sus listas; el gráfico presenta porcentajes y recuentos con su denominador.
 - Evitar duplicados y mostrar errores de importación.
-- Mostrar la cantidad de listas publicada/importada usada en cada análisis y advertir que no equivale necesariamente al total de participantes.
+- Conservar los torneos entre sesiones mediante sus archivos locales y volver a leerlos al iniciar; excluir de la lectura automática archivos auxiliares que no sean datos de torneos.
+- Mostrar por separado la proporción de arquetipos entre listas publicadas y la cobertura del torneo (listas publicadas frente a participantes reales), solo cuando el total de participantes esté disponible.
+- Al combinar torneos, sumar listas y participantes; mostrar la cobertura conjunta como incompleta si falta el total de participantes de algún evento.
 - La carga y visualización iniciales se probaron satisfactoriamente con el torneo de muestra del 20 de noviembre de 2026. Esta prueba técnica no valida todavía todos los criterios del MVP.
 
 ### Fuera del MVP acordado
@@ -56,7 +59,6 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 
 ## 7. Decisiones pendientes
 - Fuente exacta y viabilidad de la extracción remota de torneos.
-- Reglas detalladas de clasificación y agrupación de arquetipos.
-- Si hace falta persistir los torneos importados entre sesiones locales.
+- Criterios detallados para agrupar o dividir arquetipos manualmente, como evolución posterior al MVP.
 - Arquitectura futura y estrategia de despliegue, si se decide publicar el producto.
 - Qué funcionalidades analíticas avanzadas entran en versiones posteriores.

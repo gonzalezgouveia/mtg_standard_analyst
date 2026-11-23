@@ -1,6 +1,6 @@
 # Diario de aprendizaje — MTG Standard Metagame
 
-**Versión:** 0.4 · **Inicio:** 21/11/2026 · **Actualizado:** 23/11/2026
+**Versión:** 0.5 · **Inicio:** 21/11/2026 · **Actualizado:** 23/11/2026
 
 Este documento registra brevemente qué hacemos, qué aprendemos y cómo colaboramos con la IA. Se actualizará al cerrar cada fase o hito importante. Los estados son orientativos y podrán cambiar.
 
@@ -10,9 +10,9 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 - [x] **2. Primeros borradores:** preparar la visión y el backlog iniciales.
 - [x] **3. Revisar y validar la visión:** prioridad confirmada: ayudar al propietario a preparar torneos de Standard con datos recientes.
 - [x] **4. Refinar y priorizar el backlog:** MVP local, importación manual CSV/JSON de varios torneos, filtros por fecha y tipo, recuentos y porcentajes por arquetipo y cobertura visible. Rediseño visual, automatización y acceso público quedan fuera.
-- [ ] **5. Diseño funcional y de datos:** acordar métricas y denominadores, reglas de clasificación y cobertura.
+- [x] **5. Diseño funcional y de datos:** reglas de filtros, denominadores, cobertura y evolución temporal acordadas. La validación de más fuentes sigue pendiente.
 - [x] **6. Prueba técnica inicial:** cargar la muestra en Streamlit y comprobar que se visualiza. La viabilidad de fuentes remotas queda pendiente y fuera del MVP.
-- [ ] **7. Diseño de arquitectura:** Streamlit y Python ya están elegidos para el prototipo; falta cerrar persistencia y estructura a medida que se definan las necesidades.
+- [ ] **7. Diseño de arquitectura:** Streamlit y Python ya están elegidos para el prototipo; queda diseñar e implementar la lectura automática de torneos desde `data/` al iniciar.
 - [x] **8. Preparación del desarrollo:** repositorio, entorno local, documentación, pruebas iniciales y flujo de trabajo con IA preparados.
 - [ ] **9. Desarrollo iterativo del MVP:** en curso; completar filtros, métricas y cobertura.
 - [ ] **10. Pruebas y validación:** verificar resultados, calidad de datos y requisitos.
@@ -65,6 +65,58 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 **Papel de la IA:** La IA preparó y ejecutó las operaciones de Git solicitadas, explicó la diferencia entre conexión remota y permisos del entorno, y comprobó el estado final de la rama. El propietario completó la autorización de GitHub y aprobó las operaciones solicitadas.
 
 **Resultado y siguiente paso:** Se comprobó que el flujo de commit y push funciona después de conectar GitHub y conceder la aprobación requerida. En futuras operaciones, verificar primero que GitHub sigue conectado y aceptar la solicitud de aprobación de Codex si aparece. Esta prueba valida el flujo de Git, no los criterios funcionales del MVP.
+
+### Entrada 004 — Reglas de análisis del metajuego (23/11/2026)
+**Estado:** Terminado.
+
+**Qué hicimos:** Acordamos cómo calcular la presencia de arquetipos, tratar listas sin etiqueta, combinar torneos, definir ventanas temporales, normalizar categorías de evento, expresar cobertura y construir la evolución temporal.
+
+**Qué aprendimos:** El número del título de un evento no equivale necesariamente al total de participantes. En la muestra disponible, el Standard Challenge 32 tuvo 52 participantes y 32 listas publicadas. Por eso el porcentaje de arquetipos debe usar las listas realmente importadas; la cobertura de participantes es una medida distinta y requiere conocer el total real.
+
+**Decisiones y motivos:** «Sin etiquetar» será una categoría independiente incluida en el denominador. Al combinar eventos se suman recuentos y denominadores, no se promedian porcentajes. Los filtros de fecha usan la fecha del torneo, incluyen hoy y ofrecen 7, 15 o 30 días, o 2 o 3 meses naturales. Los tipos se normalizan a Standard Challenge o Standard Showcase Challenge, conservando el título de origen y sin inferir participantes de sus sufijos numéricos. La cobertura de participantes se muestra por separado cuando el total está disponible; si falta en algún evento seleccionado, la cobertura conjunta se declara incompleta. La evolución agrupa por fecha del torneo y muestra porcentaje, recuento y denominador; los eventos del mismo día se agregan.
+
+**Papel de la IA:** Propuso definiciones y ejemplos para hacer explícitos los denominadores y evitar confundir listas publicadas con participantes totales. El propietario revisó y confirmó cada regla antes de incorporarla a la documentación.
+
+**Resultado y siguiente paso:** Las reglas funcionales del análisis quedan documentadas. Continuar con la validación de datos de varios torneos y después implementar filtros, métricas y cobertura en el dashboard.
+
+### Entrada 005 — Importación del total de participantes (23/11/2026)
+**Estado:** Terminado.
+
+**Qué hicimos:** Añadimos al esquema de importación el campo opcional `participants_total`, actualizamos la muestra del Standard Challenge 32 con el total de 52 participantes reportado por la fuente y documentamos el formato CSV/JSON.
+
+**Qué aprendimos:** El total de participantes es un dato del evento, aunque el archivo tenga una fila por mazo. En el formato actual se repite el mismo total en cada fila de ese torneo; si no se conoce, se deja vacío en todas. El importador comprueba que los valores sean enteros positivos y consistentes dentro del torneo.
+
+**Decisiones y motivos:** No deducir el total de participantes a partir del sufijo numérico del nombre del evento. Mantener el dato opcional y separado del número de listas publicadas.
+
+**Papel de la IA:** La IA preparó un ejemplo con datos ya documentados, implementó la aceptación y validación del nuevo campo y actualizó la guía de importación; el propietario confirmó el formato antes de implementarlo.
+
+**Resultado y siguiente paso:** El importador ya conserva el total real de participantes cuando se proporciona. Integrar esta información en el indicador de cobertura del dashboard después de validar varios torneos.
+
+### Entrada 006 — Aclaración sobre carga persistente de torneos (23/11/2026)
+**Estado:** Decisión terminada; implementación pendiente.
+
+**Qué hicimos:** Al revisar si el MVP debía conservar datos entre sesiones, el propietario aclaró el flujo deseado: al abrir la aplicación, esta debe leer automáticamente la carpeta local de datos y cargar los torneos disponibles. No quiere volver a importar los mismos torneos cada vez que inicia Streamlit.
+
+**Qué aprendimos:** Persistencia no significa necesariamente crear una base de datos. En este MVP, los propios archivos locales de torneos pueden ser la fuente duradera: añadir un nuevo archivo a `data/` incorpora un evento y el inicio de la aplicación vuelve a leer los archivos existentes. La etiqueta manual guardada en `archetype_labels.json` es un archivo auxiliar y no debe confundirse con un torneo.
+
+**Decisiones y motivos:** La carga automática desde `data/` forma parte del alcance aprobado del MVP. La recolección de nuevos datos continúa siendo manual; quedan fuera la consulta remota y la actualización automática. El prototipo actual aún no cumple este requisito: conserva los torneos cargados solo en la sesión de Streamlit. Se actualizan visión, backlog, README, guía de datos e instrucciones del proyecto para reflejar esa diferencia entre objetivo y estado actual.
+
+**Papel de la IA:** La IA detectó que la pregunta de persistencia seguía marcada como pendiente y explicó el comportamiento actual. El propietario corrigió el supuesto y concretó el flujo esperado; la IA registró esa decisión en la documentación sin implementar todavía el cambio.
+
+**Resultado y siguiente paso:** Requisito cerrado a nivel de producto. Implementar la lectura automática de CSV/JSON de torneos al iniciar, ignorar archivos auxiliares y mostrar errores de archivos inválidos sin bloquear los válidos. Después, comprobar el comportamiento con varios torneos guardados localmente.
+
+### Entrada 007 — Carga automática desde la carpeta local (23/11/2026)
+**Estado:** Implementado; validación funcional pendiente.
+
+**Qué hicimos:** La aplicación ahora busca en `data/` archivos CSV y JSON al inicializar la sesión de Streamlit, los valida con el esquema habitual y carga los registros válidos. Informa por separado de archivos que no se puedan leer o validar. La detección por extensión deja fuera los archivos auxiliares de etiquetas. La importación desde el panel lateral sigue disponible y es temporal; para que un archivo aparezca en futuras sesiones hay que guardarlo en `data/`.
+
+**Qué aprendimos:** La persistencia local puede resolverse usando los archivos de datos existentes como fuente duradera y cargándolos al inicio, sin introducir una base de datos para este MVP. La validación combinada también evita contar dos veces el mismo mazo si aparece duplicado entre archivos.
+
+**Decisiones y motivos:** Se mantiene la incorporación manual de nuevos torneos y se excluyen la consulta remota y la actualización automática. Un archivo inválido no debe bloquear la carga de otros válidos.
+
+**Papel de la IA:** La IA implementó el lector de carpeta, lo conectó al inicio de Streamlit y alineó la documentación con el comportamiento. La validación visual de la aplicación y las pruebas con varios archivos quedan pendientes.
+
+**Resultado y siguiente paso:** La carga automática está implementada. Validar abriendo la aplicación con varios archivos de torneo en `data/`, incluyendo un archivo inválido y las etiquetas guardadas, y confirmar que no hay duplicados ni errores de carga.
 
 ## Plantilla de próximas entradas
 
