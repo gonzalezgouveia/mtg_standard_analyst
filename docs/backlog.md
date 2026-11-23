@@ -1,6 +1,6 @@
 # Backlog inicial — MTG Standard Metagame
 
-**Versión:** 0.2  
+**Versión:** 0.3  
 **Fecha:** 23 de noviembre de 2026  
 **Estado:** Alcance del MVP aprobado
 
@@ -79,6 +79,17 @@ Pestaña independiente con resúmenes de arquetipos y evolución por periodos an
 
 ### ANA-002 — Analítica avanzada y predicción (P2, por definir)
 Explorar análisis estadísticos y modelos predictivos una vez validada la calidad y representatividad de los datos.
+
+### ANA-003 — Revisión manual de arquetipos y subarquetipos (P2)
+Permitir que el propietario revise la etiqueta publicada de cada mazo y le asigne una categoría analítica propia. La revisión debe admitir tanto combinar nombres distintos en una categoría común como dividir un mismo nombre publicado en varios subarquetipos (por ejemplo, variantes de Azorius Momo), según criterios definidos manualmente.
+
+**Criterios de aceptación:**
+- Conservar la etiqueta original de la fuente para trazabilidad.
+- Asignar o cambiar la categoría de análisis por mazo, con opción de usar una misma categoría para varios mazos.
+- Recalcular recuentos y porcentajes tras una reclasificación, manteniendo la regla del denominador que incluye «Sin etiquetar».
+- No inferir subarquetipos automáticamente; la división requiere revisar listas completas o disponer de criterios verificables.
+
+**Dependencia y prioridad:** evolución posterior al MVP. La muestra actual no incluye las listas completas de cartas, así que no permite separar subarquetipos con fiabilidad.
 
 ## Siguientes tareas para completar el MVP
 1. Probar importación de varios torneos y comprobar que no se duplican registros.

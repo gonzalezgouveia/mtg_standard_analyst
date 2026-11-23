@@ -21,9 +21,10 @@ Las etiquetas manuales se persisten en `data/archetype_labels.json`. El estado d
 
 ## Documentación del proyecto
 
-- [Visión del producto](vision.md): usuario, propósito y límites aprobados del MVP.
-- [Backlog](backlog.md): criterios de aceptación y siguientes tareas.
-- [Diario de aprendizaje](learning_journal.md): decisiones, aprendizajes y colaboración entre el desarrollador y la IA.
+- [Visión del producto](docs/vision.md): usuario, propósito y límites aprobados del MVP.
+- [Backlog](docs/backlog.md): criterios de aceptación y siguientes tareas.
+- [Diario de aprendizaje](docs/learning_journal.md): decisiones, aprendizajes y colaboración entre el desarrollador y la IA.
+- [Instrucciones para Codex](AGENTS.md): contexto y reglas de trabajo para agentes de IA.
 - [Datos de ejemplo y procedencia](data/standard_challenge_32_2026-11-20_SOURCE.md): cobertura y limitaciones de la muestra.
 
 ## Pruebas
