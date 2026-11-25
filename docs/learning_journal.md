@@ -1,6 +1,6 @@
 # Diario de aprendizaje — MTG Standard Metagame
 
-**Versión:** 0.5 · **Inicio:** 21/11/2026 · **Actualizado:** 23/11/2026
+**Versión:** 0.7 · **Inicio:** 21/11/2026 · **Actualizado:** 25/11/2026
 
 Este documento registra brevemente qué hacemos, qué aprendemos y cómo colaboramos con la IA. Se actualizará al cerrar cada fase o hito importante. Los estados son orientativos y podrán cambiar.
 
@@ -12,14 +12,14 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 - [x] **4. Refinar y priorizar el backlog:** MVP local, importación manual CSV/JSON de varios torneos, filtros por fecha y tipo, recuentos y porcentajes por arquetipo y cobertura visible. Rediseño visual, automatización y acceso público quedan fuera.
 - [x] **5. Diseño funcional y de datos:** reglas de filtros, denominadores, cobertura y evolución temporal acordadas. La validación de más fuentes sigue pendiente.
 - [x] **6. Prueba técnica inicial:** cargar la muestra en Streamlit y comprobar que se visualiza. La viabilidad de fuentes remotas queda pendiente y fuera del MVP.
-- [ ] **7. Diseño de arquitectura:** Streamlit y Python ya están elegidos; el MVP usará SQLite para persistencia local y queda pendiente completar esa capa relacional.
+- [x] **7. Diseño de arquitectura:** Streamlit y Python para la aplicación y SQLite para la persistencia local.
 - [x] **8. Preparación del desarrollo:** repositorio, entorno local, documentación, pruebas iniciales y flujo de trabajo con IA preparados.
-- [ ] **9. Desarrollo iterativo del MVP:** en curso; completar filtros, métricas y cobertura.
-- [ ] **10. Pruebas y validación:** verificar resultados, calidad de datos y requisitos.
-- [ ] **11. Entrega del MVP:** documentación, ejecución local y demostración.
+- [x] **9. Desarrollo iterativo del MVP:** filtros, presencia, cobertura, evolución e indicador de importación implementados.
+- [x] **10. Pruebas y validación:** revisión de los criterios P0 completada y documentada en la revisión de aceptación.
+- [x] **11. Entrega del MVP:** paquete local verificado, guía de arranque y traslado disponible, y cierre confirmado por el propietario.
 - [ ] **12. Evolución posterior:** publicación web, automatización e histórico, según prioridades.
 
-**Estado actual:** visión y alcance del MVP aprobados el 23/11/2026. Se comprobó manualmente que la muestra se carga y se visualiza. El foco pasa a completar y validar los criterios funcionales acordados; no se ha validado una integración remota.
+**Estado actual:** el MVP local está cerrado. Se verificó la entrega recién extraída y el propietario confirmó el cierre. El piloto local contiene seis torneos de MTGO y 190 listas publicadas.
 
 > **Terminología:** *Discovery* o descubrimiento es la fase de comprensión del problema. **Licitación** es un proceso para solicitar y evaluar ofertas de proveedores; no es una fase necesaria en este proyecto individual. Después del descubrimiento suelen venir definición, diseño, implementación, validación y entrega, con iteraciones entre ellas.
 
@@ -197,6 +197,70 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 **Papel de la IA:** Amplió la consulta SQLite, conectó el valor con la presentación del dashboard y corrigió la documentación de estado.
 
 **Resultado y siguiente paso:** Código compilado y revisión de formato correcta; no se ejecutaron pruebas automatizadas. Revisar visualmente la fecha en Streamlit y, cuando haya datos verificables de varios torneos, validar filtros y agregaciones.
+
+### Entrada 014 — Piloto con seis torneos de MTGO (25/11/2026)
+
+**Estado:** Carga confirmada en SQLite. Revisión inicial en Streamlit realizada.
+
+**Qué hicimos:** Conservamos el Challenge original del día 20 e incorporamos otros cinco eventos celebrados del 20 al 24 de noviembre. El piloto suma cinco Standard Challenge y un Showcase, con 190 listas publicadas, 158 de ellas nuevas. Guardamos un CSV por evento y anotamos su procedencia en el archivo local `data/standard_pilot_2026-11-20_to_24_SOURCE.md`.
+
+**Qué aprendimos:** Las dos fichas del día 20 corresponden a eventos distintos y suman 64 listas. El Showcase del 21 tiene 32 listas publicadas de 183 participantes. La fuente del día 24 deja siete arquetipos en blanco, que se conservaron así. Los seis eventos informan el total de participantes, por lo que la cobertura incompleta requiere otro caso de validación.
+
+**Decisiones y motivos:** Mantuvimos la recopilación manual y usamos MTGO como referencia. Transcribimos cuatro eventos desde MTGpile y el del día 24 desde Magic: The Metagame. Los cinco eventos añadidos aportan metadatos de listas. El evento original conserva sus cartas estructuradas.
+
+**Papel de la IA:** Contrastó las fichas, preparó los CSV, ejecutó el importador local y consultó SQLite para confirmar los recuentos. El importador informó cero errores y dejó el torneo original sin cambios.
+
+**Resultado y siguiente paso:** El propietario confirmó en Streamlit los recuentos por categoría, el denominador de 64 del día 20, el 21,9 % de «Sin etiquetar» del día 24 y el 41,6 % de cobertura conjunta. Las ventanas de 7 y 30 días incluyeron los mismos eventos. Queda probar el cambio de resultados entre ventanas, el estado vacío y la cobertura incompleta con datos de prueba separados.
+
+### Entrada 015 — Base mínima para validar el dashboard (25/11/2026)
+
+**Estado:** Comprobaciones del dashboard completadas con la base de prueba.
+
+**Qué hicimos:** Preparamos una copia local del dashboard con dos eventos ficticios, a seis y siete días de la fecha de preparación. Uno declara cuatro participantes y el otro deja ese dato vacío. La herramienta genera una base SQLite separada usando el importador habitual.
+
+**Resultado y siguiente paso:** El propietario confirmó la cobertura incompleta, el aviso de filtros sin resultados y el cambio de 2 listas a 1 con una cobertura del 25 % al pasar de 30 a 7 días. Una ejecución aislada de Streamlit creó una base vacía y mostró el aviso inicial sin excepciones. La [guía de validación](dashboard_validation.md) explica cómo repetir estos casos. Sigue la revisión de los criterios de importación y persistencia del MVP.
+
+### Entrada 016 — Comprobaciones de importación y persistencia (25/11/2026)
+
+**Estado:** Cuatro comprobaciones superadas en una base aislada. Las 15 pruebas existentes pasaron.
+
+**Qué hicimos:** Reimportamos el mismo contenido desde un segundo archivo y comprobamos que se conservaban la lista y la fecha de importación. Abrimos otro proceso con el archivo original retirado y recuperamos la lista desde SQLite. Después presentamos un JSON inválido y dos archivos válidos pero contradictorios. En ambos casos el importador informó del problema y conservó la versión y la fecha ya guardadas.
+
+**Resultado y siguiente paso:** El propietario completó la comprobación desde el panel lateral en la copia aislada. Subió un Showcase después del Challenge que ya había importado, cerró Streamlit con Ctrl+C y confirmó que ambos seguían visibles al volver a abrirlo. Se verificaron los dos CSV guardados y sus 62 listas en SQLite. El piloto real quedó intacto. El siguiente paso es cotejar la evidencia con los criterios de aceptación del MVP.
+
+### Entrada 017 — Revisión de aceptación del MVP (25/11/2026)
+
+**Estado:** Revisión realizada. Cierre pendiente.
+
+**Qué hicimos:** Cotejamos las comprobaciones del propietario en Streamlit, las consultas a SQLite, las pruebas existentes y el código con los criterios P0 del backlog.
+
+**Qué aprendimos:** Un JSON inválido con varios torneos puede actualizar uno antes de que se detecte un error en otro. Lo reproducimos en una base aislada. Las comprobaciones previas de archivos inválidos y conflictos siguen siendo válidas para los casos que cubren.
+
+**Resultado y siguiente paso:** El importador valida todos los torneos del archivo antes de registrar candidatos y guarda cada archivo de metadatos en una transacción. Pasaron 18 pruebas, incluidas tres nuevas que cubren el rechazo íntegro, la reversión si falla el segundo torneo y el tratamiento de archivos en conflicto e independientes. El propietario confirmó en Streamlit la subida de un JSON con una lista y el rechazo de otro con una fecha inválida. Se verificó la lista guardada en SQLite. La [revisión de aceptación](mvp_acceptance.md) recoge los casos que quedan por comprobar.
+
+### Entrada 018 — Etiquetas manuales cuando desaparece una lista (25/11/2026)
+
+**Estado:** Comprobado en una sesión aislada de Streamlit.
+
+**Qué hicimos:** Guardamos una etiqueta desde el formulario de Streamlit y subimos una nueva versión del torneo sin esa lista. SQLite dejó de devolver la lista, el archivo de etiquetas conservó su clave y Streamlit mostró el aviso, también al abrir otra sesión. Al volver a subir la versión original, reapareció la lista con su etiqueta y el aviso desapareció. Comprobamos que excluir la lista mediante un filtro tampoco activa el aviso.
+
+**Resultado y siguiente paso:** La [revisión de aceptación](mvp_acceptance.md) recoge la evidencia. Quedan los límites de 15 días, 2 meses naturales y 3 meses naturales.
+
+### Entrada 019 — Límites temporales y cierre de la revisión P0 (25/11/2026)
+
+**Estado:** Comprobaciones de aceptación completadas. Entrega pendiente.
+
+**Qué hicimos:** Ejecutamos Streamlit con los torneos de la copia de prueba y eventos ficticios situados en los límites de 15 días, 2 meses y 3 meses naturales. Confirmamos que entra el primer día de cada ventana y queda fuera el anterior. Los tres periodos incluyeron hoy y excluyeron mañana. Los recuentos de la tabla, la cobertura por torneo y los denominadores de la evolución coincidieron para cada selección.
+
+**Resultado y siguiente paso:** La [revisión de aceptación](mvp_acceptance.md) reúne la evidencia de los criterios P0. La hoja de ruta pasa a la entrega del MVP local.
+
+### Entrada 020 — Entrega del MVP local (25/11/2026)
+
+**Estado:** Entrega verificada y cierre confirmado por el propietario.
+
+**Qué hicimos:** Reunimos el código, los requisitos, las pruebas y la documentación en un ZIP. La [guía de entrega](local_delivery.md) explica el arranque en Windows, cómo transportar una instalación con sus datos y cómo hacer una demostración con la base de prueba.
+
+**Resultado y siguiente paso:** La copia extraída arrancó en Streamlit con SQLite vacío y generó la base de demostración. Pasaron 17 pruebas y se omitió la que requiere el CSV del piloto local. El propietario dio por finalizado el MVP. El backlog recoge las propuestas de una fase posterior, incluida la extracción bajo demanda por fechas.
 
 ## Plantilla de próximas entradas
 

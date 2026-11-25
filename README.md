@@ -1,18 +1,17 @@
-# MTG Standard Metagame Analytics — prototipo P01
+# MTG Standard Metagame Analytics — MVP local
 
-Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP usa SQLite como almacenamiento relacional persistente e importa CSV/JSON desde `data/`. El dashboard ya incluye filtros por fecha y tipo, presencia de arquetipos, cobertura de participantes y evolución por fecha; la validación con varios torneos sigue pendiente.
+Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP usa SQLite como almacenamiento relacional persistente e importa CSV/JSON desde `data/`. El dashboard incluye filtros por fecha y tipo, presencia de arquetipos, cobertura de participantes y evolución por fecha.
 
-La primera prueba técnica confirmó que una muestra local se importa y se muestra en el dashboard. La muestra incluye metadatos y cartas de 32 listas publicadas de un evento con 52 participantes, por lo que no representa a todo el torneo. La aplicación muestra la última importación aceptada para los torneos seleccionados. Los archivos de datos se mantienen localmente y no se versionan con Git. La consulta remota, la publicación web y el rediseño visual se dejan para etapas posteriores.
+El piloto local reúne 190 listas publicadas de seis torneos de MTGO celebrados del 20 al 24 de noviembre de 2026. Incluye cartas estructuradas para las 32 listas del torneo original. El backlog recoge las comprobaciones del dashboard completadas con el piloto y una base de prueba separada. La aplicación muestra la última importación aceptada para los torneos seleccionados. Los archivos de datos se mantienen localmente y no se versionan con Git. La consulta remota, la publicación web y el rediseño visual se dejan para etapas posteriores.
 
 ## Requisitos y ejecución
 
-Se recomienda Python 3.11 o posterior. Desde la raíz del repositorio:
+Se recomienda Python 3.11 o posterior. Desde la raíz del proyecto, en Git Bash o PowerShell:
 
-```powershell
-py -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-streamlit run app.py
+```bash
+python -m venv .venv
+./.venv/Scripts/python.exe -m pip install -r requirements.txt
+./.venv/Scripts/python.exe -m streamlit run app.py
 ```
 
 Al iniciar, la aplicación valida los archivos CSV/JSON de torneos en `data/` y los sincroniza con la base SQLite local. Los archivos de cartas con sufijo `_cards.csv` se leen desde `data/examples/` o `data/cards/`. La importación del panel lateral guarda el archivo validado en `data/` y lo sincroniza con la base.
@@ -21,6 +20,8 @@ Las etiquetas manuales se persisten en `data/archetype_labels.json`. SQLite norm
 
 ## Documentación del proyecto
 
+- [Entrega y arranque local](docs/local_delivery.md): instalación, traslado de datos y demostración.
+- [Revisión de aceptación](docs/mvp_acceptance.md): evidencia de las comprobaciones del MVP.
 - [Visión del producto](docs/vision.md): usuario, propósito y límites aprobados del MVP.
 - [Backlog](docs/backlog.md): criterios de aceptación y siguientes tareas.
 - [Esquema de la base de datos](docs/database_schema.md): tablas, columnas, relaciones y reglas de integridad de SQLite.

@@ -90,8 +90,8 @@ La clave primaria es `(tournament_id, source_path)`. Puede haber más de un arch
 
 - Las claves foráneas conectan las listas con sus torneos y las cartas con su lista. Al reemplazar un snapshot válido, sus filas relacionadas se actualizan en cascada dentro de una transacción.
 - Los snapshots idénticos se reconocen y no crean duplicados. Una versión completa modificada se valida y reemplaza de forma transaccional.
-- Si el archivo es inválido, se conserva el snapshot anterior. Si hay dos archivos contradictorios para el mismo torneo, se informa el conflicto y no se importa ninguno de esos snapshots.
+- Los archivos de metadatos se validan completos y se aplican en una sola transacción por archivo. Un archivo inválido o un fallo de escritura conserva los snapshots anteriores. Si varios archivos válidos discrepan sobre un torneo, se informa del conflicto y se rechazan los archivos implicados completos. Los archivos válidos independientes se procesan por separado.
 - Las etiquetas manuales se guardan fuera de SQLite, en `data/archetype_labels.json`; no son una columna de la tabla `decks`.
 - Los índices de `decks.player`, `decks.archetype` y `deck_cards.card_name` ayudan a consultas por esos campos.
 
-Para ver las consultas de ejemplo y abrir la base con DB Browser for SQLite, consulta el [README del proyecto](../README.md) y la [guía de datos](../data/README.md).
+Consulta la [guía de datos](../data/README.md) para ver el formato de entrada y la [guía de entrega](local_delivery.md) para arrancar o trasladar una instalación con su base local.

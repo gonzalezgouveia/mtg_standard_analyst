@@ -1,8 +1,8 @@
 # Backlog inicial — MTG Standard Metagame
 
-**Versión:** 0.6
-**Fecha:** 23 de noviembre de 2026
-**Estado:** Alcance del MVP aprobado
+**Versión:** 0.7
+**Fecha:** 25 de noviembre de 2026
+**Estado:** MVP local cerrado. Criterios P0 comprobados y paquete de entrega verificado.
 
 ## Convenciones
 - **P0:** imprescindible para validar el producto.
@@ -12,9 +12,17 @@
 
 ## MVP — Requisitos y criterios de aceptación
 
-El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El esquema, la sincronización local y las vistas acordadas de filtros, presencia, cobertura y evolución están implementados. Falta validar el comportamiento con varios torneos y completar los criterios indicados en DASH-003. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
+El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. Al iniciar se incorporan los CSV/JSON válidos de `data/` y el dashboard consulta esa base. La carga de seis torneos reales está confirmada en SQLite y DASH-003 recoge las comprobaciones completadas del dashboard. El rediseño visual, la consulta remota y la publicación quedan fuera del MVP.
+
+La [revisión de aceptación del MVP](mvp_acceptance.md) reúne la evidencia de los criterios P0. La importación parcial de archivos con varios torneos se corrigió y verificó. Se completaron las comprobaciones del panel de importación, las etiquetas huérfanas y los límites temporales.
+
+La [guía de entrega local](local_delivery.md) explica el arranque, el traslado de datos y la demostración con una base separada.
 
 ### ING-001 — Importar archivos manuales de torneos (P0)
+**Comprobación manual:** En una copia aislada, el propietario subió un Standard Challenge y un Standard Showcase Challenge desde el panel lateral. Después de cerrar y volver a iniciar Streamlit, ambos seguían disponibles. Se confirmó que los dos CSV seguían en la carpeta de datos y que SQLite conservaba sus 30 y 32 listas, respectivamente.
+
+También se confirmó la subida de un JSON válido de una lista y el aviso de fecha inválida para un JSON rechazado. SQLite conservó la lista válida y el archivo rechazado quedó fuera de la carpeta de importación. El propietario comprobó en el panel el aviso verde «Archivo guardado e importado. 1 lista procesada.».
+
 **Historia:** Como propietario, quiero subir archivos CSV o JSON de listas publicadas para alimentar el sistema sin depender de una integración remota.
 
 **Aceptación:**
@@ -38,7 +46,9 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - La carga automática respeta las validaciones y reglas de análisis documentadas.
 
 ### DAT-003 — Almacenamiento relacional local SQLite (P0)
-**Estado:** Esquema, sincronización local y conexión con Streamlit implementados; validación inicial completada.
+**Estado:** Esquema, sincronización local y conexión con Streamlit implementados. Se verificaron en una base aislada la reimportación idéntica, la persistencia al arrancar otro proceso y la conservación de la versión aceptada ante archivos inválidos, conflictos y fallos de escritura. Pasaron las 18 pruebas del repositorio con los datos locales.
+
+Una prueba de Streamlit confirmó que una etiqueta manual se conserva cuando desaparece su lista y que el aviso sigue visible al abrir otra sesión. Al restaurar la lista se reaplica la etiqueta y desaparece el aviso. Filtrar la lista fuera de la vista no genera un aviso de orfandad.
 
 **Historia:** Como propietario, quiero que el dashboard use un almacenamiento SQLite normalizado para conservar los torneos y evitar repetir metadatos del evento en cada lista.
 
@@ -81,6 +91,8 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - En la cobertura combinada, suma listas publicadas y participantes solo si se conoce el total de participantes de todos los eventos seleccionados. Si falta alguno, indica que la cobertura conjunta está incompleta.
 
 ### DASH-001 — Filtro temporal (P0)
+**Comprobación:** El propietario confirmó el límite de 7 días. Una ejecución aislada de Streamlit verificó los de 15 días y 2 y 3 meses naturales, con hoy incluido y los eventos futuros excluidos. Los recuentos de la tabla, la cobertura por torneo y los denominadores de la evolución coincidieron para cada selección.
+
 **Aceptación:**
 - Se basa en la fecha del torneo e incluye hoy.
 - Opciones: 7 días, 15 días, 30 días, 2 meses naturales y 3 meses naturales.
@@ -96,7 +108,17 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - La combinación de torneos usa recuentos de mazos, no promedios simples de porcentajes.
 
 ### DASH-003 — Dashboard principal (P0)
-**Estado:** Implementación parcial. Filtros, presencia por arquetipo, cobertura, evolución por fecha y fecha de última importación aceptada implementados. Queda validar los criterios con varios torneos y confirmar visualmente el estado vacío.
+**Estado:** Piloto verificado en SQLite y comprobaciones del dashboard completadas. El propietario revisó el piloto y la base de prueba en Streamlit. El arranque sin torneos se comprobó con una ejecución aislada de Streamlit.
+
+**Comprobaciones con el piloto del 20 al 24 de noviembre de 2026:**
+
+- [x] Evolución del 20 de noviembre: denominador de 64 listas al combinar los dos Challenge.
+- [x] Filtro de categoría: Ambos devuelve 190 listas, Showcase devuelve las 32 del día 21 y Standard Challenge devuelve 158.
+- [x] «Sin etiquetar» el 24 de noviembre: 7 listas sobre 32 (21,9 %).
+- [x] Cobertura conjunta: 190 listas sobre 457 participantes (41,6 %).
+- [x] Límite temporal con la base de prueba: con Ambos, al cambiar de 30 a 7 días se pasó de 2 listas a 1 y la cobertura pasó de incompleta al 25 %.
+- [x] Confirmar el aviso de filtros sin resultados y la cobertura incompleta con la [base de prueba separada](dashboard_validation.md). El propietario comprobó ambos casos en Streamlit.
+- [x] Arranque sin torneos: una ejecución aislada de Streamlit creó la base vacía y mostró el aviso inicial sin excepciones.
 
 **Aceptación:**
 - Muestra distribución por arquetipo y evolución agrupada por fecha del torneo.
@@ -141,17 +163,12 @@ Permitir que el propietario revise la etiqueta publicada de cada mazo y le asign
 
 **Dependencia y prioridad:** evolución posterior al MVP. La muestra incluye listas completas de los 32 mazos publicados de este evento, pero no todas las 52 participaciones; cualquier división manual debe basarse en revisar las cartas de cada lista y dejar claro ese límite de cobertura.
 
-## Siguientes tareas para completar el MVP
-1. Ampliar comprobaciones de persistencia con varias fuentes de torneo, etiquetas manuales y conflictos entre archivos.
-2. Implementar filtros temporales y por tipo de torneo con el comportamiento acordado.
-3. Calcular recuentos y porcentajes por arquetipo usando el total de listas publicadas disponibles como denominador.
-4. Mostrar cobertura y limitaciones de representatividad junto a los resultados.
-5. Validar los datos y resultados con más torneos locales antes de ampliar el alcance.
-
 ## Descubrimiento pendiente para una fase posterior
-- Evaluar MTGpile como posible fuente futura para incorporar resultados y listas de otros Challenges. Antes de automatizar, probar varias fechas, comparar con la referencia de MTGO, medir listas publicadas frente a participantes, comprobar estabilidad de las páginas y revisar condiciones de uso. No forma parte del MVP ni requiere ampliar ahora la muestra de prueba.
+
+- Evaluar una extracción bajo demanda por rango de fechas que genere archivos para revisión e importación local. Es una propuesta para la siguiente fase.
+- Evaluar MTGpile como posible fuente futura. El piloto utilizó sus fichas públicas para cuatro de los cinco torneos añadidos. Antes de automatizar, comparar con la referencia de MTGO, comprobar la estabilidad de las páginas y revisar sus condiciones de uso.
 - Contrastar otras fuentes remotas, disponibilidad, estabilidad y condiciones de uso antes de automatizar.
-- Priorizar mejoras visuales después de completar la validación funcional del MVP.
+- Priorizar las mejoras visuales cuando se defina el alcance de una fase posterior.
 
 ## Fuera de alcance inicial
 - Acceso público en Internet.

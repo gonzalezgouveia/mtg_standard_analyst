@@ -78,12 +78,17 @@ with st.sidebar:
                 sync_local_data(DATA_PATH, DATABASE_PATH)
                 raise DataValidationError(" ".join(upload_errors))
             st.session_state.startup_errors = errors
-            st.success(f"Archivo guardado en data e importado. {len(incoming)} listas procesadas.")
+            st.session_state.imported_deck_count = len(incoming)
             st.rerun()
         except DataValidationError as exc:
             st.error(str(exc))
         except OSError as exc:
             st.error(f"No se pudo guardar o importar el archivo: {exc}")
+
+    imported_count = st.session_state.pop("imported_deck_count", None)
+    if imported_count is not None:
+        processed = "1 lista procesada" if imported_count == 1 else f"{imported_count} listas procesadas"
+        st.success(f"Archivo guardado e importado. {processed}.")
 
 data = query_decks(DATABASE_PATH)
 if data.empty:

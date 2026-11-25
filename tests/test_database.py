@@ -119,6 +119,79 @@ def test_conflicting_complete_files_do_not_choose_a_version(tmp_path):
     assert query_decks(database).empty
 
 
+def test_inconsistent_event_rejects_whole_file_and_loads_independent_file(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    source = data_dir / "multiple.csv"
+    database = tmp_path / "local.sqlite3"
+    first = record("d1", "alice", "1")
+    second = {**record("d1", "bob", "1"), "tournament_id": "event-2"}
+    independent = {**record("d1", "clara", "1"), "tournament_id": "event-3"}
+    write_tournament(source, [first, second])
+    assert not sync_local_data(data_dir, database)[1]
+    stored = query_decks(database).set_index("tournament_id")
+
+    inconsistent = {**second, "deck_id": "d2", "tournament_date": "2026-11-21"}
+    write_tournament(source, [{**first, "archetype": "Aggro"}, second, inconsistent])
+    write_tournament(data_dir / "independent.csv", [independent])
+    summaries, errors = sync_local_data(data_dir, database)
+
+    assert len(errors) == 1 and "multiple.csv" in errors[0] and "event-2" in errors[0]
+    assert len(summaries) == 1 and summaries[0].startswith("event-3:")
+    updated = query_decks(database).set_index("tournament_id")
+    assert updated.loc[stored.index].equals(stored)
+    assert updated.loc["event-3", "player"] == "clara"
+
+
+def test_write_failure_rolls_back_all_events_in_file(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    source = data_dir / "multiple.csv"
+    database = tmp_path / "local.sqlite3"
+    first = record("d1", "alice", "1")
+    second = {**record("d1", "bob", "1"), "tournament_id": "event-2"}
+    removed = record("d2", "clara", "2")
+    write_tournament(source, [first, removed, second])
+    assert not sync_local_data(data_dir, database)[1]
+    stored = query_decks(database)
+
+    connection = connect_database(database)
+    try:
+        connection.execute(
+            """CREATE TRIGGER reject_second_event BEFORE UPDATE ON decks
+               WHEN NEW.tournament_id = 'event-2'
+               BEGIN SELECT RAISE(ABORT, 'test write failure'); END"""
+        )
+    finally:
+        connection.close()
+
+    write_tournament(source, [{**first, "archetype": "Aggro"}, {**second, "archetype": "Tempo"}])
+    summaries, errors = sync_local_data(data_dir, database)
+
+    assert not summaries
+    assert len(errors) == 1 and "multiple.csv" in errors[0] and "test write failure" in errors[0]
+    assert query_decks(database).equals(stored)
+
+
+def test_conflicted_files_leave_other_events_to_independent_sources(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    database = tmp_path / "local.sqlite3"
+    contested = record("d1", "alice", "1")
+    independent = {**record("d1", "bob", "1"), "tournament_id": "event-2"}
+    write_tournament(data_dir / "a.csv", [contested, independent])
+    write_tournament(data_dir / "b.csv", [{**contested, "archetype": "Aggro"}])
+
+    _, errors = sync_local_data(data_dir, database)
+    assert any("Conflicto" in error for error in errors)
+    assert query_decks(database).empty
+
+    write_tournament(data_dir / "independent.csv", [independent])
+    _, errors = sync_local_data(data_dir, database)
+    assert any("Conflicto" in error for error in errors)
+    assert query_decks(database)["tournament_id"].tolist() == ["event-2"]
+
+
 def test_invalid_card_snapshot_preserves_existing_cards(tmp_path):
     data_dir = tmp_path / "data"
     examples = data_dir / "examples"

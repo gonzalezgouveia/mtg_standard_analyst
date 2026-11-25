@@ -1,8 +1,8 @@
 # Visión de producto — MTG Standard Metagame
 
-**Versión:** 0.5
-**Fecha:** 23 de noviembre de 2026
-**Estado:** Aprobada para orientar el MVP
+**Versión:** 0.6
+**Fecha:** 25 de noviembre de 2026
+**Estado:** Alcance aprobado y MVP local validado
 
 ## 1. Propósito
 Crear una aplicación web de análisis del metajuego competitivo de Magic: The Gathering en formato Standard, centrada inicialmente en torneos Standard Challenge y Standard Showcase Challenge. Su objetivo principal es ayudar al propietario a preparar torneos mediante información reciente y comprensible sobre arquetipos, presencia en el metajuego y evolución temporal.
@@ -32,7 +32,7 @@ Unificar datos de torneos publicados, limpiarlos, clasificarlos y transformarlos
 - Conservar los torneos entre sesiones en SQLite; al iniciar, procesar de forma idempotente los archivos locales y excluir archivos auxiliares que no sean datos de torneos.
 - Mostrar por separado la proporción de arquetipos entre listas publicadas y la cobertura del torneo (listas publicadas frente a participantes reales), solo cuando el total de participantes esté disponible.
 - Al combinar torneos, sumar listas y participantes; mostrar la cobertura conjunta como incompleta si falta el total de participantes de algún evento.
-- La carga y visualización iniciales se probaron satisfactoriamente con el torneo de muestra del 20 de noviembre de 2026. Esta prueba técnica no valida todavía todos los criterios del MVP.
+- El MVP se validó con un piloto de seis torneos y 190 listas publicadas y con bases aisladas para los casos de prueba. La [revisión de aceptación](mvp_acceptance.md) recoge la evidencia y la [guía de entrega](local_delivery.md) explica cómo arrancarlo y trasladar los datos.
 
 ### Fuera del MVP acordado
 - Rediseño visual y cambios de presentación; se posponen hasta después de completar la validación funcional.

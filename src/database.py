@@ -159,11 +159,11 @@ def _ingest_event(
     connection: sqlite3.Connection,
     tournament_id: str,
     frame: pd.DataFrame,
-    source_paths: list[str],
+    snapshot_hash: str,
+    source_path: str,
 ) -> str:
-    _validate_event_consistency(frame, tournament_id)
+    """Write an already validated event within its source file's transaction."""
     records = _records(frame, FIELDS)
-    snapshot_hash = _event_hash(frame)
     tournament_date = records[0]["tournament_date"]
     tournament_type = records[0]["tournament_type"]
     raw_total = records[0]["participants_total"]
@@ -173,10 +173,9 @@ def _ingest_event(
         "SELECT snapshot_hash FROM tournaments WHERE tournament_id = ?", (tournament_id,)
     ).fetchone()
 
-    with connection:
-        if current is None or current["snapshot_hash"] != snapshot_hash:
-            connection.execute(
-                """INSERT INTO tournaments
+    if current is None or current["snapshot_hash"] != snapshot_hash:
+        connection.execute(
+            """INSERT INTO tournaments
                    (tournament_id, tournament_date, tournament_type, tournament_category,
                     participants_total, source_url, snapshot_hash, imported_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -188,35 +187,35 @@ def _ingest_event(
                      source_url=excluded.source_url,
                      snapshot_hash=excluded.snapshot_hash,
                      imported_at=excluded.imported_at""",
-                (tournament_id, tournament_date, tournament_type,
-                 _normalize_tournament_category(tournament_type), participants_total,
-                 source_url, snapshot_hash, _now()),
-            )
-            valid_ids = [row["deck_id"] for row in records]
-            placeholders = ",".join("?" for _ in valid_ids)
+            (tournament_id, tournament_date, tournament_type,
+             _normalize_tournament_category(tournament_type), participants_total,
+             source_url, snapshot_hash, _now()),
+        )
+        valid_ids = [row["deck_id"] for row in records]
+        placeholders = ",".join("?" for _ in valid_ids)
+        connection.execute(
+            f"DELETE FROM decks WHERE tournament_id = ? AND deck_id NOT IN ({placeholders})",
+            [tournament_id, *valid_ids],
+        )
+        for row in records:
             connection.execute(
-                f"DELETE FROM decks WHERE tournament_id = ? AND deck_id NOT IN ({placeholders})",
-                [tournament_id, *valid_ids],
-            )
-            for row in records:
-                connection.execute(
-                    """INSERT INTO decks
+                """INSERT INTO decks
                        (tournament_id, deck_id, player, placement, archetype, decklist, source_url)
                        VALUES (?, ?, ?, ?, ?, ?, ?)
                        ON CONFLICT(tournament_id, deck_id) DO UPDATE SET
                          player=excluded.player, placement=excluded.placement,
                          archetype=excluded.archetype, decklist=excluded.decklist,
                          source_url=excluded.source_url""",
-                    (tournament_id, row["deck_id"], row["player"], row["placement"],
-                     row["archetype"], row["decklist"], row["source_url"]),
-                )
-        for source_path in source_paths:
-            connection.execute(
-                """INSERT INTO tournament_sources(tournament_id, source_path, snapshot_hash)
-                   VALUES (?, ?, ?) ON CONFLICT(tournament_id, source_path)
-                   DO UPDATE SET snapshot_hash=excluded.snapshot_hash""",
-                (tournament_id, source_path, snapshot_hash),
+                (tournament_id, row["deck_id"], row["player"], row["placement"],
+                 row["archetype"], row["decklist"], row["source_url"]),
             )
+    connection.execute(
+        """INSERT INTO tournament_sources(tournament_id, source_path, snapshot_hash)
+           VALUES (?, ?, ?) ON CONFLICT(tournament_id, source_path)
+           DO UPDATE SET snapshot_hash=excluded.snapshot_hash
+           WHERE tournament_sources.snapshot_hash <> excluded.snapshot_hash""",
+        (tournament_id, source_path, snapshot_hash),
+    )
     return "sin cambios" if current is not None and current["snapshot_hash"] == snapshot_hash else "actualizado"
 
 
@@ -300,7 +299,8 @@ def _sync_metadata_files(
     connection: sqlite3.Connection, data_dir: Path
 ) -> tuple[list[str], list[str]]:
     errors: list[str] = []
-    snapshots: dict[str, list[tuple[Path, pd.DataFrame, str]]] = {}
+    files: dict[Path, dict[str, tuple[pd.DataFrame, str]]] = {}
+    versions_by_event: dict[str, dict[Path, str]] = {}
     for path in sorted(data_dir.iterdir(), key=lambda item: item.name.lower()):
         if (
             not path.is_file()
@@ -311,33 +311,47 @@ def _sync_metadata_files(
         try:
             with path.open("rb") as file:
                 frame = load_tournament_file(file, path.name)
+            events = {}
             for tournament_id, event in frame.groupby("tournament_id", sort=False):
-                event = event.reset_index(drop=True)
                 _validate_event_consistency(event, tournament_id)
-                snapshots.setdefault(tournament_id, []).append(
-                    (path, event, _event_hash(event))
-                )
+                events[tournament_id] = (event, _event_hash(event))
         except (DataValidationError, OSError) as exc:
             errors.append(f"{path.name}: {exc}")
+            continue
+        files[path] = events
+        for tournament_id, (_, snapshot_hash) in events.items():
+            versions_by_event.setdefault(tournament_id, {})[path] = snapshot_hash
 
-    summaries: list[str] = []
-    for tournament_id, versions in snapshots.items():
-        hashes = {item[2] for item in versions}
-        if len(hashes) > 1:
-            names = ", ".join(item[0].name for item in versions)
+    conflicted_files: set[Path] = set()
+    for tournament_id, versions in versions_by_event.items():
+        if len(set(versions.values())) > 1:
+            conflicted_files.update(versions)
+            names = ", ".join(path.name for path in versions)
             errors.append(
                 f"Conflicto: los archivos {names} contienen versiones distintas "
-                f"del torneo {tournament_id}; no se importó ninguna."
+                f"del torneo {tournament_id}; se rechazaron los archivos completos."
             )
+
+    summaries: dict[str, str] = {}
+    for path, events in files.items():
+        if path in conflicted_files:
             continue
-        path, event, _ = versions[0]
-        paths = [_relative(item[0], data_dir) for item in versions]
+        source_path = _relative(path, data_dir)
+        file_summaries: dict[str, str] = {}
         try:
-            outcome = _ingest_event(connection, tournament_id, event, paths)
-            summaries.append(f"{tournament_id}: {outcome} ({len(event)} listas)")
-        except (DataValidationError, sqlite3.Error) as exc:
-            errors.append(f"{path.name}: no se pudo guardar {tournament_id}: {exc}")
-    return summaries, errors
+            with connection:
+                connection.execute("BEGIN IMMEDIATE")
+                for tournament_id, (event, snapshot_hash) in events.items():
+                    outcome = _ingest_event(
+                        connection, tournament_id, event, snapshot_hash, source_path
+                    )
+                    file_summaries[tournament_id] = f"{tournament_id}: {outcome} ({len(event)} listas)"
+        except (OverflowError, sqlite3.Error) as exc:
+            errors.append(f"{path.name}: no se pudo guardar el archivo completo: {exc}")
+            continue
+        for tournament_id, summary in file_summaries.items():
+            summaries.setdefault(tournament_id, summary)
+    return list(summaries.values()), errors
 
 
 def _sync_card_files(
