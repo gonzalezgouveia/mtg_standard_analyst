@@ -424,13 +424,25 @@ def query_decks(database_path: str | Path) -> pd.DataFrame:
         connection.close()
 
 
-def query_card_counts(database_path: str | Path) -> dict[str, int]:
+def query_card_counts(
+    database_path: str | Path, tournament_ids: list[str] | None = None
+) -> dict[str, int]:
     connection = connect_database(database_path)
     try:
+        if tournament_ids is not None and not tournament_ids:
+            return {"rows": 0, "decks": 0}
+        where = ""
+        params: tuple[str, ...] = ()
+        if tournament_ids is not None:
+            where = f" WHERE tournament_id IN ({','.join('?' for _ in tournament_ids)})"
+            params = tuple(tournament_ids)
         return {
-            "rows": connection.execute("SELECT COUNT(*) FROM deck_cards").fetchone()[0],
+            "rows": connection.execute(
+                f"SELECT COUNT(*) FROM deck_cards{where}", params
+            ).fetchone()[0],
             "decks": connection.execute(
-                "SELECT COUNT(DISTINCT tournament_id || '::' || deck_id) FROM deck_cards"
+                "SELECT COUNT(DISTINCT tournament_id || '::' || deck_id) FROM deck_cards" + where,
+                params,
             ).fetchone()[0],
         }
     finally:
