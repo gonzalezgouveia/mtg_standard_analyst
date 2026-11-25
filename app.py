@@ -132,6 +132,21 @@ st.caption(
     f"Cobertura: {len(view)} mazos publicados en {view['tournament_id'].nunique()} torneo(s); "
     "no representa necesariamente a todos los participantes."
 )
+if not filtered_data.empty and "imported_at" in filtered_data.columns:
+    latest_import = pd.to_datetime(
+        filtered_data["imported_at"], utc=True, errors="coerce"
+    ).max()
+    if pd.notna(latest_import):
+        local_import_time = latest_import.to_pydatetime().astimezone()
+        st.caption(
+            "Última importación aceptada de los torneos seleccionados: "
+            f"{local_import_time:%d/%m/%Y %H:%M} (hora local)."
+        )
+elif not filtered_data.empty:
+    st.caption(
+        "La fecha de última importación no está disponible en la consulta actual. "
+        "Reinicia Streamlit para cargar la versión actualizada."
+    )
 if view.empty:
     st.info("No hay listas para el periodo y el tipo de torneo seleccionados.")
 c1, c2, c3, c4 = st.columns(4)

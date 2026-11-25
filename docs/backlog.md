@@ -12,7 +12,7 @@
 
 ## MVP — Requisitos y criterios de aceptación
 
-El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El esquema y la sincronización local SQLite están implementados; los filtros y métricas acordados siguen pendientes. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
+El MVP es una aplicación local para uso personal con SQLite como almacenamiento relacional persistente. CSV/JSON en `data/` son archivos de entrada; al iniciar se incorporan los válidos a SQLite y el dashboard lee de esa base. El esquema, la sincronización local y las vistas acordadas de filtros, presencia, cobertura y evolución están implementados. Falta validar el comportamiento con varios torneos y completar los criterios indicados en DASH-003. El rediseño visual, la consulta remota y la publicación quedan fuera de este alcance.
 
 ### ING-001 — Importar archivos manuales de torneos (P0)
 **Historia:** Como propietario, quiero subir archivos CSV o JSON de listas publicadas para alimentar el sistema sin depender de una integración remota.
@@ -96,7 +96,7 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - La combinación de torneos usa recuentos de mazos, no promedios simples de porcentajes.
 
 ### DASH-003 — Dashboard principal (P0)
-**Estado:** Implementación parcial. Filtros, presencia por arquetipo, cobertura y evolución por fecha implementados. Queda pendiente mostrar la fecha de última actualización y validar los criterios con varios torneos.
+**Estado:** Implementación parcial. Filtros, presencia por arquetipo, cobertura, evolución por fecha y fecha de última importación aceptada implementados. Queda validar los criterios con varios torneos y confirmar visualmente el estado vacío.
 
 **Aceptación:**
 - Muestra distribución por arquetipo y evolución agrupada por fecha del torneo.

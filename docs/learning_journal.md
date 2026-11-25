@@ -185,6 +185,19 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Resultado y siguiente paso:** El código compila y la revisión de formato no reporta errores. Falta comprobar la agregación con varios eventos, especialmente eventos distintos en una misma fecha, cuando haya datos disponibles. Después, completar la fecha de última actualización y revisar el MVP funcional.
 
+### Entrada 013 — Fecha de última importación y documentación (25/11/2026)
+**Estado:** Implementado; revisión visual pendiente.
+
+**Qué hicimos:** Añadimos a la consulta del dashboard el momento de importación aceptada de cada torneo y mostramos la fecha más reciente entre los torneos que pasan los filtros. Actualizamos el README y el resumen del backlog para reflejar los filtros, métricas, cobertura y evolución ya implementados.
+
+**Qué aprendimos:** La columna `imported_at` registra la última importación aceptada del snapshot de un torneo. Una sincronización idéntica sin cambios no actualiza ese momento, por lo que el indicador describe cuándo se incorporó por última vez una versión aceptada, no cuándo se abrió Streamlit.
+
+**Decisiones y motivos:** El indicador sigue los filtros activos para que su alcance coincida con los datos mostrados. Se presenta en hora local. Se mantiene la validación con varios torneos como trabajo pendiente.
+
+**Papel de la IA:** Amplió la consulta SQLite, conectó el valor con la presentación del dashboard y corrigió la documentación de estado.
+
+**Resultado y siguiente paso:** Código compilado y revisión de formato correcta; no se ejecutaron pruebas automatizadas. Revisar visualmente la fecha en Streamlit y, cuando haya datos verificables de varios torneos, validar filtros y agregaciones.
+
 ## Plantilla de próximas entradas
 
 ### Entrada NNN — [Fase o hito] ([fecha])

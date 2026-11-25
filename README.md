@@ -1,8 +1,8 @@
 # MTG Standard Metagame Analytics — prototipo P01
 
-Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP usa SQLite como almacenamiento relacional persistente e importa CSV/JSON desde `data/`; la implementación de filtros por fecha y tipo, métricas por arquetipo y cobertura sigue pendiente.
+Herramienta local para ayudarte a preparar torneos de Magic: The Gathering Standard mediante el análisis de listas publicadas. El MVP usa SQLite como almacenamiento relacional persistente e importa CSV/JSON desde `data/`. El dashboard ya incluye filtros por fecha y tipo, presencia de arquetipos, cobertura de participantes y evolución por fecha; la validación con varios torneos sigue pendiente.
 
-La primera prueba técnica ya confirmó que una muestra local se importa y se muestra en el dashboard. La muestra de prueba incluye metadatos y cartas de 32 listas publicadas de un evento con 52 participantes, por lo que no representa a todo el torneo. Los archivos de datos se mantienen localmente y no se versionan con Git. La consulta remota, la publicación web y los cambios visuales se dejan para etapas posteriores.
+La primera prueba técnica confirmó que una muestra local se importa y se muestra en el dashboard. La muestra incluye metadatos y cartas de 32 listas publicadas de un evento con 52 participantes, por lo que no representa a todo el torneo. La aplicación muestra la última importación aceptada para los torneos seleccionados. Los archivos de datos se mantienen localmente y no se versionan con Git. La consulta remota, la publicación web y el rediseño visual se dejan para etapas posteriores.
 
 ## Requisitos y ejecución
 

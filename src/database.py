@@ -406,18 +406,21 @@ def query_decks(database_path: str | Path) -> pd.DataFrame:
     try:
         rows = connection.execute(
             """SELECT d.tournament_id, t.tournament_date, t.tournament_type,
-                      t.tournament_category, t.participants_total, d.deck_id, d.player, d.placement,
-                      d.archetype, d.decklist, d.source_url
+                      t.tournament_category, t.participants_total, t.imported_at,
+                      d.deck_id, d.player, d.placement, d.archetype, d.decklist, d.source_url
                FROM decks AS d JOIN tournaments AS t USING (tournament_id)
                ORDER BY t.tournament_date DESC, t.tournament_id, d.placement, d.deck_id"""
         ).fetchall()
         columns = [
-            "tournament_id", "tournament_date", "tournament_type", "tournament_category", "participants_total",
+            "tournament_id", "tournament_date", "tournament_type", "tournament_category",
+            "participants_total", "imported_at",
             "deck_id", "player", "placement", "archetype", "decklist", "source_url",
         ]
         frame = pd.DataFrame([dict(row) for row in rows], columns=columns)
-        for column in ("tournament_id", "tournament_date", "tournament_type", "tournament_category", "deck_id",
-                       "player", "placement", "archetype", "decklist", "source_url"):
+        for column in (
+            "tournament_id", "tournament_date", "tournament_type", "tournament_category",
+            "imported_at", "deck_id", "player", "placement", "archetype", "decklist", "source_url",
+        ):
             frame[column] = frame[column].fillna("").astype(str)
         return frame
     finally:
