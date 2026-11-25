@@ -203,6 +203,49 @@ if card_counts["rows"]:
         f"{card_counts['decks']} listas."
     )
 
+st.subheader("Evolución por fecha")
+if view.empty:
+    st.info("No hay listas para mostrar en la evolución del periodo seleccionado.")
+else:
+    evolution = (
+        view.groupby(["tournament_date", "archetype_display"], as_index=False)
+        .size()
+        .rename(
+            columns={
+                "tournament_date": "Fecha",
+                "archetype_display": "Arquetipo",
+                "size": "Listas",
+            }
+        )
+    )
+    denominators = view.groupby("tournament_date").size()
+    evolution["Denominador"] = evolution["Fecha"].map(denominators)
+    evolution["Presencia (%)"] = evolution["Listas"] / evolution["Denominador"] * 100
+    evolution["Fecha"] = pd.to_datetime(evolution["Fecha"])
+    evolution = evolution.sort_values(["Fecha", "Arquetipo"])
+    evolution_chart = px.line(
+        evolution,
+        x="Fecha",
+        y="Presencia (%)",
+        color="Arquetipo",
+        markers=True,
+        custom_data=["Listas", "Denominador"],
+        labels={"Fecha": "Fecha del torneo", "Presencia (%)": "Presencia (%)"},
+    )
+    evolution_chart.update_traces(
+        hovertemplate=(
+            "%{fullData.name}<br>Fecha: %{x|%Y-%m-%d}<br>Presencia: %{y:.1f}%"
+            "<br>Listas: %{customdata[0]} de %{customdata[1]}<extra></extra>"
+        )
+    )
+    st.plotly_chart(evolution_chart, use_container_width=True)
+    st.dataframe(
+        evolution.assign(Fecha=evolution["Fecha"].dt.strftime("%Y-%m-%d")),
+        use_container_width=True,
+        hide_index=True,
+        column_config={"Presencia (%)": st.column_config.NumberColumn(format="%.1f%%")},
+    )
+
 col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("Distribución de arquetipos")

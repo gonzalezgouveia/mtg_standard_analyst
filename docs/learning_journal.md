@@ -172,6 +172,19 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Resultado y siguiente paso:** Las 32 listas y 988 filas de cartas se cargaron en la base local; al sincronizar por segunda vez no hubo cambios ni duplicados. Las 15 pruebas automatizadas pasaron y la prueba de Streamlit terminó sin excepciones. Seguir con los filtros por fecha y tipo, métricas y cobertura.
 
+### Entrada 012 — Evolución del metajuego por fecha (25/11/2026)
+**Estado:** Implementado; validación funcional con varios eventos pendiente.
+
+**Qué hicimos:** Añadimos al dashboard una evolución temporal de la presencia de arquetipos para los torneos que pasan los filtros activos. La vista agrupa las listas por fecha y arquetipo, muestra porcentajes y permite consultar recuentos y denominadores en el gráfico y la tabla.
+
+**Qué aprendimos:** La base de comparación temporal es el total de listas publicadas de cada fecha, sumando los eventos del mismo día. «Sin etiquetar» permanece como categoría independiente y forma parte del denominador.
+
+**Decisiones y motivos:** Se conserva la fecha del torneo como eje temporal y se agregan eventos coincidentes antes de calcular porcentajes. No se promedian porcentajes de eventos. La evolución respeta los filtros de periodo y tipo ya existentes.
+
+**Papel de la IA:** Implementó la agrupación y visualización en Streamlit, y actualizó el estado del dashboard en el backlog.
+
+**Resultado y siguiente paso:** El código compila y la revisión de formato no reporta errores. Falta comprobar la agregación con varios eventos, especialmente eventos distintos en una misma fecha, cuando haya datos disponibles. Después, completar la fecha de última actualización y revisar el MVP funcional.
+
 ## Plantilla de próximas entradas
 
 ### Entrada NNN — [Fase o hito] ([fecha])

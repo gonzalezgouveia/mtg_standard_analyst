@@ -96,6 +96,8 @@ El MVP es una aplicación local para uso personal con SQLite como almacenamiento
 - La combinación de torneos usa recuentos de mazos, no promedios simples de porcentajes.
 
 ### DASH-003 — Dashboard principal (P0)
+**Estado:** Implementación parcial. Filtros, presencia por arquetipo, cobertura y evolución por fecha implementados. Queda pendiente mostrar la fecha de última actualización y validar los criterios con varios torneos.
+
 **Aceptación:**
 - Muestra distribución por arquetipo y evolución agrupada por fecha del torneo.
 - Si hay varios eventos de la categoría seleccionada en una misma fecha, agrega sus recuentos.
