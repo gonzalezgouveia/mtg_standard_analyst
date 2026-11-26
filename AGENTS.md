@@ -33,6 +33,7 @@
 
 ## Forma de trabajar
 - Mantén la documentación del producto en `docs/`; conserva en la raíz los puntos de entrada y configuración necesarios para ejecutar el proyecto.
+- Considera las skills repo-locales de `.agents/skills/` cuando una tarea coincida con su flujo especializado. No son requisitos para toda tarea ni funciones de la aplicación; el propietario puede seleccionar una en Codex o pedirla por su nombre. La descripción orienta la selección automática, pero no la garantiza.
 - No inventes ni completes datos de torneos sin una fuente verificable.
 - Antes de editar, revisa el estado del repositorio y conserva cambios existentes del propietario.
 - Resume los cambios y las comprobaciones realizadas.

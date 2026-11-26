@@ -262,6 +262,18 @@ Este documento registra brevemente qué hacemos, qué aprendemos y cómo colabor
 
 **Resultado y siguiente paso:** La copia extraída arrancó en Streamlit con SQLite vacío y generó la base de demostración. Pasaron 17 pruebas y se omitió la que requiere el CSV del piloto local. El propietario dio por finalizado el MVP. El backlog recoge las propuestas de una fase posterior, incluida la extracción bajo demanda por fechas.
 
+### Entrada 021 — Skills repo-locales de Codex (26/11/2026)
+
+**Estado:** Tres borradores preparados para uso futuro; todavía no se han probado formalmente.
+
+**Qué aprendimos:** Una skill es una guía reutilizable para un procedimiento especializado, no un miniagente independiente. `AGENTS.md` recoge instrucciones generales y duraderas del repositorio; cada `SKILL.md` bajo `.agents/skills/<nombre>/` desarrolla un flujo concreto que Codex puede considerar cuando la descripción encaja. La selección automática no está garantizada. La documentación oficial permite pedir una skill explícitamente por su nombre; en la interfaz usada, el propietario también puede elegirla desde las opciones disponibles.
+
+**Decisiones y motivos:** No hace falta crear una skill para cada tarea. Conviene valorar una cuando se repiten pasos y errores típicos; una petición puntual puede resolverse con el prompt. Para evaluar una skill, comparar un prompt natural que debería activarla, una invocación explícita y un caso de control negativo. Una respuesta correcta no prueba que se haya invocado la skill; revisar la traza o una evaluación de proceso da evidencia más sólida.
+
+**Papel de la IA:** Preparó tres borradores repo-locales: `verification-before-completion`, adaptación atribuida de obra/superpowers; `revisar-importacion-torneos`; y `revisar-analisis-metajuego`. El propietario los revisó y considera adecuados para usarlos más adelante. No se han probado formalmente y no son obligatorios.
+
+**Resultado y siguiente paso:** Se añadió una nota mínima a `AGENTS.md` para que Codex considere las skills cuando encajen y permita selección explícita sin asumir invocación automática. El MVP y su alcance no cambian; las skills no añaden funciones a la aplicación. Si el propietario decide adoptarlas en tareas futuras, evaluar su activación y seguimiento con ejemplos positivos, explícitos y negativos.
+
 ## Plantilla de próximas entradas
 
 ### Entrada NNN — [Fase o hito] ([fecha])
